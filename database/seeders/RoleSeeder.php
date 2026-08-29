@@ -11,13 +11,14 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin          = Role::firstOrCreate(['name' => 'administrador',  'guard_name' => 'web']);
-        $operador       = Role::firstOrCreate(['name' => 'operador',      'guard_name' => 'web']);
-        $mecanico       = Role::firstOrCreate(['name' => 'mecanico',      'guard_name' => 'web']);
-        $administracion = Role::firstOrCreate(['name' => 'administracion', 'guard_name' => 'web']);
+        $admin           = Role::firstOrCreate(['name' => 'administrador',  'guard_name' => 'web']);
+        $operador        = Role::firstOrCreate(['name' => 'operador',      'guard_name' => 'web']);
+        $mecanico        = Role::firstOrCreate(['name' => 'mecanico',      'guard_name' => 'web']);
+        $administracion  = Role::firstOrCreate(['name' => 'administracion', 'guard_name' => 'web']);
+        $mecanicoExterno = Role::firstOrCreate(['name' => 'mecanico_externo', 'guard_name' => 'web']);
 
         $user = User::firstOrCreate(
-            ['email' => 'admin@admin.com'],
+            ['email' => 'soportemerlotransportes@gmail.com'],
             [
                 'name'      => 'Administrador',
                 'last_name' => 'Sistema',

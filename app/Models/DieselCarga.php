@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\GroqAiService;
 use Illuminate\Database\Eloquent\Model;
 
 class DieselCarga extends Model
@@ -41,5 +42,20 @@ class DieselCarga extends Model
     public function reviewedBy()
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function registrarEgresoAutomatico(int $userId): void
+    {
+        $etiqueta = $this->tipo === 'inicial' ? 'Diésel inicial' : 'Diésel extra';
+
+        IngresoEgreso::registrarDesdeOrigen($this, [
+            'tipo' => 'egreso',
+            'concepto' => "{$etiqueta} - Viaje {$this->viaje->no_contrato}",
+            'monto' => $this->monto,
+            'fecha' => $this->reviewed_at ?? now(),
+            'categoria' => 'Combustible',
+            'pais' => app(GroqAiService::class)->determinarPais($this->viaje->destino),
+            'user_id' => $userId,
+        ]);
     }
 }

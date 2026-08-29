@@ -198,17 +198,33 @@
                         </button>
                     </div>
 
-                    {{-- Estado: Grabado --}}
+                    {{-- Estado: Grabado / Transcribiendo --}}
                     <div x-show="mode === 'recorded'" x-cloak class="mb-3 flex flex-wrap items-center gap-3 px-3.5 py-2.5 bg-green-900/10 border border-green-700/30 rounded-xl">
-                        <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        <span class="text-xs text-green-400 flex-1">Audio grabado y transcrito abajo.</span>
+                        <template x-if="transcribing">
+                            <svg class="w-4 h-4 text-amber-400 flex-shrink-0 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </template>
+                        <template x-if="!transcribing">
+                            <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </template>
+                        <span class="text-xs flex-1" :class="transcribing ? 'text-amber-400' : 'text-green-400'"
+                              x-text="transcribing ? 'Transcribiendo audio...' : 'Audio grabado y transcrito abajo.'"></span>
                         <audio controls :src="audioUrl" class="h-8 max-w-[180px]"></audio>
                         <button type="button" @click="reset()"
                                 class="text-xs text-gray-500 hover:text-gray-300 transition-colors flex-shrink-0">
                             Grabar de nuevo
                         </button>
+                    </div>
+
+                    {{-- Error de transcripción en servidor (no bloquea, el audio ya se grabó) --}}
+                    <div x-show="transcribeError" x-cloak class="mb-3 flex items-start gap-2 text-xs text-amber-400">
+                        <svg class="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <span x-text="transcribeError"></span>
                     </div>
 
                     {{-- Error de acceso al micrófono --}}
@@ -267,6 +283,43 @@
                             <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
                         @enderror
                         @error('fotos.*')
+                            <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Video de evidencia --}}
+                    <div class="mt-4" x-data="videoUpload()">
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">
+                            Video de evidencia <span class="text-gray-600 font-normal">(opcional, máx. 3 videos, 20MB c/u)</span>
+                        </label>
+                        <label for="videos"
+                               class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-700 rounded-xl cursor-pointer bg-gray-900/40 hover:bg-gray-900/60 hover:border-red-600/50 transition-all mb-3">
+                            <svg class="w-7 h-7 text-gray-600 mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            <p class="text-sm text-gray-500">🎥 Grabar video o <span class="text-red-400">adjuntar archivo</span></p>
+                        </label>
+                        <input type="file" id="videos" name="videos[]" accept="video/*" multiple class="hidden"
+                               @change="handleFiles($event.target.files)"/>
+
+                        <div x-show="previews.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <template x-for="(src, i) in previews" :key="i">
+                                <div class="relative group aspect-video">
+                                    <video :src="src" class="w-full h-full object-cover rounded-xl border border-gray-700/50" controls></video>
+                                    <button type="button" @click="removeVideo(i)"
+                                            class="absolute top-1 right-1 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+
+                        @error('videos')
+                            <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
+                        @enderror
+                        @error('videos.*')
                             <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
@@ -349,6 +402,32 @@ function photoUpload() {
             const dt = new DataTransfer();
             this.files.forEach(f => dt.items.add(f));
             document.getElementById('fotos').files = dt.files;
+        }
+    }
+}
+
+function videoUpload() {
+    return {
+        previews: [],
+        files: [],
+        handleFiles(fileList) {
+            Array.from(fileList).forEach(file => {
+                if (!file.type.startsWith('video/')) return;
+                this.files.push(file);
+                this.previews.push(URL.createObjectURL(file));
+            });
+            this.syncInput();
+        },
+        removeVideo(index) {
+            URL.revokeObjectURL(this.previews[index]);
+            this.previews.splice(index, 1);
+            this.files.splice(index, 1);
+            this.syncInput();
+        },
+        syncInput() {
+            const dt = new DataTransfer();
+            this.files.forEach(f => dt.items.add(f));
+            document.getElementById('videos').files = dt.files;
         }
     }
 }

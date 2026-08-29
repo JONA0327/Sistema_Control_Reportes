@@ -13,17 +13,8 @@
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-white">Viajes</h1>
-            <p class="text-sm text-gray-500 mt-0.5">Control de contratos, kilometraje y gastos de viaje</p>
+            <p class="text-sm text-gray-500 mt-0.5">Los viajes se generan automáticamente al crear un contrato</p>
         </div>
-        @hasanyrole('administrador|administracion')
-        <a href="{{ route('viajes.create') }}"
-           class="brand-gradient inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg shadow-red-950/40 hover:opacity-90 transition-opacity">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Nuevo viaje
-        </a>
-        @endhasanyrole
     </div>
 
     {{-- Alerta --}}
@@ -85,23 +76,31 @@
                         {{-- Contrato --}}
                         <td class="px-5 py-3">
                             <p class="text-sm font-semibold text-white">{{ $viaje->no_contrato }}</p>
+                            @if($viaje->contrato)
+                                <p class="text-xs text-gray-600">Contrato {{ $viaje->contrato->folio }}</p>
+                            @endif
                         </td>
                         {{-- Unidad / Operador --}}
                         <td class="px-5 py-3">
-                            <p class="text-sm text-white">Bus #{{ $viaje->bus->num_bus }}</p>
-                            <p class="text-xs text-gray-500 truncate">{{ $viaje->operador->name }} {{ $viaje->operador->last_name }}</p>
+                            <p class="text-sm text-white">{{ $viaje->bus ? 'Bus #'.$viaje->bus->num_bus : 'Sin unidad' }}</p>
+                            <p class="text-xs text-gray-500 truncate">{{ $viaje->operador ? $viaje->operador->name.' '.$viaje->operador->last_name : 'Sin operador' }}</p>
                         </td>
                         {{-- Ruta --}}
                         <td class="px-5 py-3 hidden md:table-cell">
-                            <p class="text-sm text-gray-300 truncate">{{ $viaje->origen }} &rarr; {{ $viaje->destino }}</p>
+                            <p class="text-sm text-gray-300 truncate">{{ $viaje->origen ?: '—' }} &rarr; {{ $viaje->destino ?: '—' }}</p>
                         </td>
                         {{-- Fechas --}}
                         <td class="px-5 py-3 hidden lg:table-cell">
                             <p class="text-xs text-gray-400">{{ $viaje->fecha_salida->format('d/m/Y') }} &ndash; {{ $viaje->fecha_regreso->format('d/m/Y') }}</p>
                         </td>
-                        {{-- Km --}}
+                        {{-- Km / Estado --}}
                         <td class="px-5 py-3">
-                            @if(!$viaje->liquidacion || $viaje->liquidacion->estado === 'abierta')
+                            @if($viaje->esta_pendiente)
+                                <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-medium bg-red-500/10 text-red-400 border-red-500/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                                    Pendiente
+                                </span>
+                            @elseif(!$viaje->liquidacion || $viaje->liquidacion->estado === 'abierta')
                                 <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-medium bg-amber-500/10 text-amber-400 border-amber-500/20">
                                     <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                                     En curso
@@ -114,6 +113,7 @@
                         <td class="px-5 py-3">
                             <div class="flex items-center justify-end gap-1.5">
                                 @hasanyrole('administrador|administracion')
+                                @unless($viaje->esta_pendiente)
                                 <a href="{{ route('viajes.gastos', $viaje) }}"
                                    class="p-2 rounded-lg text-gray-500 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
                                    title="Gastos">
@@ -122,6 +122,7 @@
                                               d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                 </a>
+                                @endunless
                                 <a href="{{ route('viajes.edit', $viaje) }}"
                                    class="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-gray-700 transition-all"
                                    title="Editar">

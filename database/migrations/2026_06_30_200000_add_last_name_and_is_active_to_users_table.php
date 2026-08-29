@@ -10,14 +10,13 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('last_name')->after('name');
-            $table->boolean('is_active')->default(true)->after('password');
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['last_name', 'is_active']);
+            $table->dropColumn(['last_name']);
         });
     }
 };

@@ -78,6 +78,8 @@ class DieselCargaController extends Controller
 
     public function showForViaje(Viaje $viaje)
     {
+        abort_if($viaje->esta_pendiente, 403, 'Completa la información del viaje antes de gestionar sus gastos.');
+
         $viaje->load(['bus', 'operador', 'dieselCargas' => fn($q) => $q->orderByDesc('created_at'), 'dieselCargas.requestedBy', 'dieselCargas.reviewedBy', 'liquidacion.gastos']);
 
         return view('viajes.gastos', compact('viaje'));
@@ -85,11 +87,13 @@ class DieselCargaController extends Controller
 
     public function storeExtraByAdmin(Request $request, Viaje $viaje)
     {
+        abort_if($viaje->esta_pendiente, 403, 'Completa la información del viaje antes de registrar gastos.');
+
         $data = $request->validate([
             'monto' => ['required', 'numeric', 'min:0'],
         ]);
 
-        DieselCarga::create([
+        $dieselCarga = DieselCarga::create([
             'viaje_id'         => $viaje->id,
             'tipo'             => 'extra',
             'monto'            => $data['monto'],
@@ -99,6 +103,8 @@ class DieselCargaController extends Controller
             'reviewed_by'      => $request->user()->id,
             'reviewed_at'      => now(),
         ]);
+
+        $dieselCarga->registrarEgresoAutomatico($request->user()->id);
 
         return back()->with('success', 'Diésel extra registrado. El operador solo deberá anexar la evidencia.');
     }
@@ -112,6 +118,8 @@ class DieselCargaController extends Controller
             'reviewed_by'      => $request->user()->id,
             'reviewed_at'      => now(),
         ]);
+
+        $dieselCarga->registrarEgresoAutomatico($request->user()->id);
 
         return back()->with('success', 'Solicitud de diésel extra aprobada.');
     }

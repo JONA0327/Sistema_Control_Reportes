@@ -207,6 +207,43 @@
                 </div>
                 @endif
 
+                {{-- Videos existentes --}}
+                @if($videos->count() > 0)
+                <div class="px-6 py-5">
+                    <h2 class="text-sm font-semibold text-white mb-4 flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                            </span>
+                            Videos actuales
+                        </span>
+                        <span class="text-xs text-gray-600 font-normal">{{ $videos->count() }} video(s)</span>
+                    </h2>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        @foreach($videos as $video)
+                        <div class="relative group aspect-video">
+                            <video src="{{ Storage::url($video->evidence_path) }}" class="w-full h-full object-cover rounded-xl border border-gray-700/50" controls></video>
+                            <form method="POST" action="{{ route('reports.photos.destroy', $video) }}"
+                                  onsubmit="return confirm('¿Eliminar este video?')"
+                                  class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center shadow-lg hover:bg-red-500 transition-colors">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
                 {{-- Agregar más fotos --}}
                 <div class="px-6 py-5" x-data="photoUpload()">
                     <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
@@ -243,6 +280,49 @@
                             </div>
                         </template>
                     </div>
+                </div>
+
+                {{-- Agregar más videos --}}
+                <div class="px-6 py-5" x-data="videoUpload()">
+                    <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                        <span class="w-5 h-5 bg-gray-700 rounded-md flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </span>
+                        Agregar más videos
+                        <span class="text-xs text-gray-600 font-normal">(máx. 3 por envío, 20MB c/u)</span>
+                    </h2>
+
+                    <label for="videos"
+                           class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-700 rounded-xl cursor-pointer bg-gray-900/40 hover:bg-gray-900/60 hover:border-red-600/50 transition-all mb-3">
+                        <svg class="w-7 h-7 text-gray-600 mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="text-sm text-gray-500">Grabar o <span class="text-red-400">seleccionar video</span></p>
+                    </label>
+                    <input type="file" id="videos" name="videos[]" accept="video/*" multiple class="hidden"
+                           @change="handleFiles($event.target.files)"/>
+
+                    <div x-show="previews.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <template x-for="(src, i) in previews" :key="i">
+                            <div class="relative group aspect-video">
+                                <video :src="src" class="w-full h-full object-cover rounded-xl border border-gray-700/50 border-dashed" controls></video>
+                                <button type="button" @click="removeVideo(i)"
+                                        class="absolute top-1 right-1 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                    @error('videos')
+                        <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
+                    @enderror
+                    @error('videos.*')
+                        <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 {{-- Acciones --}}
@@ -286,6 +366,32 @@ function photoUpload() {
             const dt = new DataTransfer();
             this.files.forEach(f => dt.items.add(f));
             document.getElementById('fotos').files = dt.files;
+        }
+    }
+}
+
+function videoUpload() {
+    return {
+        previews: [],
+        files: [],
+        handleFiles(fileList) {
+            Array.from(fileList).forEach(file => {
+                if (!file.type.startsWith('video/')) return;
+                this.files.push(file);
+                this.previews.push(URL.createObjectURL(file));
+            });
+            this.syncInput();
+        },
+        removeVideo(index) {
+            URL.revokeObjectURL(this.previews[index]);
+            this.previews.splice(index, 1);
+            this.files.splice(index, 1);
+            this.syncInput();
+        },
+        syncInput() {
+            const dt = new DataTransfer();
+            this.files.forEach(f => dt.items.add(f));
+            document.getElementById('videos').files = dt.files;
         }
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Report;
 use App\Models\ReportEvidence;
 use App\Models\User;
 use App\Notifications\NuevoReporteNotification;
+use App\Services\GroqAiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
@@ -15,6 +16,10 @@ use Illuminate\Validation\Rule;
 
 class ReportController extends Controller
 {
+    public function __construct(private readonly GroqAiService $groqAi)
+    {
+    }
+
     public function index(Request $request)
     {
         $search = $request->get('search');
@@ -52,26 +57,19 @@ class ReportController extends Controller
             'description'   => ['required', 'string', 'max:1000'],
             'fotos'         => ['nullable', 'array', 'max:10'],
             'fotos.*'       => ['image', 'max:4096'],
+            'videos'        => ['nullable', 'array', 'max:3'],
+            'videos.*'      => ['file', 'mimetypes:video/mp4,video/quicktime,video/webm,video/x-msvideo', 'max:20480'],
         ]);
 
         $data['user_id']    = $request->user()->id;
         $data['status']     = 'nuevo';
         $data['created_at'] = now();
-        unset($data['fotos']);
+        $data['description_resumen'] = $this->groqAi->resumirFalla($data['description']);
+        unset($data['fotos'], $data['videos']);
 
         $report = Report::create($data);
 
-        if ($request->hasFile('fotos')) {
-            foreach ($request->file('fotos') as $foto) {
-                $path = $foto->store('reports', 'public');
-                ReportEvidence::create([
-                    'report_id'     => $report->id,
-                    'evidence_path' => $path,
-                    'evidence_type' => 'foto',
-                    'uploaded_at'   => now(),
-                ]);
-            }
-        }
+        $this->storeEvidencias($request, $report);
 
         $report->load(['bus', 'operador']);
         $destinatarios = User::role(['mecanico', 'administrador', 'administracion'])
@@ -88,7 +86,8 @@ class ReportController extends Controller
     {
         $buses  = Bus::where('status', 'activo')->orderBy('num_bus')->get();
         $photos = $report->photos()->get();
-        return view('reports.edit', compact('report', 'buses', 'photos'));
+        $videos = $report->videos()->get();
+        return view('reports.edit', compact('report', 'buses', 'photos', 'videos'));
     }
 
     public function update(Request $request, Report $report)
@@ -104,6 +103,8 @@ class ReportController extends Controller
             'description'   => ['required', 'string', 'max:1000'],
             'fotos'         => ['nullable', 'array', 'max:10'],
             'fotos.*'       => ['image', 'max:4096'],
+            'videos'        => ['nullable', 'array', 'max:3'],
+            'videos.*'      => ['file', 'mimetypes:video/mp4,video/quicktime,video/webm,video/x-msvideo', 'max:20480'],
         ];
 
         if ($canEditStatus) {
@@ -120,20 +121,15 @@ class ReportController extends Controller
             }
         }
 
-        unset($data['fotos']);
+        unset($data['fotos'], $data['videos']);
+
+        if ($data['description'] !== $report->description) {
+            $data['description_resumen'] = $this->groqAi->resumirFalla($data['description']);
+        }
+
         $report->update($data);
 
-        if ($request->hasFile('fotos')) {
-            foreach ($request->file('fotos') as $foto) {
-                $path = $foto->store('reports', 'public');
-                ReportEvidence::create([
-                    'report_id'     => $report->id,
-                    'evidence_path' => $path,
-                    'evidence_type' => 'foto',
-                    'uploaded_at'   => now(),
-                ]);
-            }
-        }
+        $this->storeEvidencias($request, $report);
 
         return redirect()->route('reports.edit', $report)
             ->with('success', "Reporte actualizado correctamente.");
@@ -141,8 +137,8 @@ class ReportController extends Controller
 
     public function destroy(Report $report)
     {
-        foreach ($report->photos as $photo) {
-            Storage::disk('public')->delete($photo->evidence_path);
+        foreach ($report->evidences as $evidencia) {
+            Storage::disk('public')->delete($evidencia->evidence_path);
         }
         $report->delete();
 
@@ -154,10 +150,32 @@ class ReportController extends Controller
     {
         Storage::disk('public')->delete($evidence->evidence_path);
         $reportId = $evidence->report_id;
+        $esVideo = $evidence->evidence_type === 'video';
         $evidence->delete();
 
         return redirect()->route('reports.edit', $reportId)
-            ->with('success', "Foto eliminada correctamente.");
+            ->with('success', $esVideo ? 'Video eliminado correctamente.' : 'Foto eliminada correctamente.');
+    }
+
+    private function storeEvidencias(Request $request, Report $report): void
+    {
+        foreach ($request->file('fotos', []) as $foto) {
+            ReportEvidence::create([
+                'report_id'     => $report->id,
+                'evidence_path' => $foto->store('reports', 'public'),
+                'evidence_type' => 'foto',
+                'uploaded_at'   => now(),
+            ]);
+        }
+
+        foreach ($request->file('videos', []) as $video) {
+            ReportEvidence::create([
+                'report_id'     => $report->id,
+                'evidence_path' => $video->store('reports/videos', 'public'),
+                'evidence_type' => 'video',
+                'uploaded_at'   => now(),
+            ]);
+        }
     }
 
     public function transcribe(Request $request)

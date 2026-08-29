@@ -171,8 +171,20 @@
     </table>
 
     <div class="box">
-        <span class="label" style="display:block; margin-bottom: 3px;">Descripción de la falla</span>
-        {{ $report->description }}
+        @if($report->description_resumen)
+            <span class="label" style="display:block; margin-bottom: 3px;">Puntos clave de la falla</span>
+            <ul style="margin: 0 0 6px 14px; padding: 0;">
+                @foreach(preg_split('/\r?\n/', trim($report->description_resumen)) as $linea)
+                    @continue(trim($linea) === '')
+                    <li>{{ ltrim(trim($linea), '-• ') }}</li>
+                @endforeach
+            </ul>
+            <span class="label" style="display:block; margin-bottom: 3px;">Descripción original del operador</span>
+            <span style="color:#6b7280; font-style: italic;">{{ $report->description }}</span>
+        @else
+            <span class="label" style="display:block; margin-bottom: 3px;">Descripción de la falla</span>
+            {{ $report->description }}
+        @endif
     </div>
 
     @if($report->photos->count() > 0)
@@ -190,6 +202,12 @@
                 @endforeach
             </tr>
         </table>
+    @endif
+
+    @if($report->videos->count() > 0)
+        <div style="font-size: 8.5px; color: #6b7280; margin-bottom: 6px;">
+            🎥 {{ $report->videos->count() }} video(s) de evidencia adjunto(s) — disponibles en el sistema de Control de Reportes (no se pueden incrustar en este PDF).
+        </div>
     @endif
 
     {{-- Orden de trabajo --}}
@@ -251,6 +269,41 @@
                     <td>{{ $parte->item->code }}</td>
                     <td>{{ $parte->item->name }}</td>
                     <td>{{ $parte->quantity_used }}</td>
+                </tr>
+                @endforeach
+            </table>
+        </div>
+    @endif
+
+    @if($orden->piezas->isNotEmpty())
+        <div class="box">
+            <span class="label" style="display:block; margin-bottom: 4px;">Piezas y ajustes realizados</span>
+            <table class="parts-table">
+                <tr>
+                    <th>Acción</th>
+                    <th>Pieza</th>
+                    <th>Notas</th>
+                    <th>Registró</th>
+                    <th style="text-align:center;">Evidencia</th>
+                </tr>
+                @foreach($orden->piezas as $pieza)
+                @php
+                    $piezaFoto = $pieza->evidencia_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($pieza->evidencia_path)
+                        ? base64_encode(\Illuminate\Support\Facades\Storage::disk('public')->get($pieza->evidencia_path))
+                        : null;
+                @endphp
+                <tr>
+                    <td>{{ \App\Models\OrdenTrabajoPieza::ACCIONES[$pieza->accion] ?? $pieza->accion }}</td>
+                    <td>{{ $pieza->pieza }}</td>
+                    <td>{{ $pieza->notas ?: '—' }}</td>
+                    <td>{{ $pieza->user->name }}</td>
+                    <td style="text-align:center;">
+                        @if($piezaFoto)
+                            <img src="data:image/jpeg;base64,{{ $piezaFoto }}" style="max-width:50px; max-height:50px; border-radius:3px;">
+                        @else
+                            —
+                        @endif
+                    </td>
                 </tr>
                 @endforeach
             </table>

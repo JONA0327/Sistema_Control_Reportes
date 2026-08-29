@@ -5,11 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Liquidacion;
 use App\Models\Report;
 use App\Models\Viaje;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->user()->hasRole('mecanico_externo')) {
+            return redirect()->route('reports.orden.externo.index');
+        }
+
         $viajesActivos = Viaje::with(['bus', 'operador'])
             ->whereHas('liquidacion', fn ($q) => $q->where('estado', 'abierta'))
             ->orderByDesc('fecha_salida')

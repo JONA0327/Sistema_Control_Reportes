@@ -18,6 +18,7 @@ class OrdenTrabajo extends Model
         'codigo_falla',
         'diagnostico',
         'proveedor_externo',
+        'proveedor_externo_user_id',
         'folio_proveedor',
         'motivo_externo',
         'fecha_promesa_entrega',
@@ -42,15 +43,11 @@ class OrdenTrabajo extends Model
         'intermitente' => 'Intermitente / No replicada',
     ];
 
-    const SUBSISTEMAS = [
-        'motor'                  => 'Motor (Inyección, Turbo, Enfriamiento, Admisión)',
-        'emisiones'              => 'Sistema de Emisiones (DEF / AdBlue, DPF, EGR)',
-        'neumatico_frenos'       => 'Sistema Neumático / Frenos (Secador, Válvulas, Balatas, Cámaras)',
-        'tren_motriz'            => 'Tren Motriz (Caja de cambios, Diferencial, Cardán, Clutch)',
-        'suspension_direccion'   => 'Suspensión / Dirección (Bolsas de aire, Caja de dirección, Muelles)',
-        'electrico_electronico'  => 'Eléctrico / Electrónico (Baterías, Alternador, Sensores, Arnés)',
-        'aire_acondicionado'     => 'Sistema de Aire Acondicionado / HVAC',
-    ];
+    /**
+     * Mismo catálogo que Report::CATEGORIAS, para que las opciones del
+     * levantamiento del operador coincidan con las del diagnóstico del mecánico.
+     */
+    const SUBSISTEMAS = Report::CATEGORIAS;
 
     const MOTIVOS_EXTERNO = [
         'diagnostico_marca'   => 'Diagnóstico por escáner propietario / software de marca',
@@ -68,5 +65,15 @@ class OrdenTrabajo extends Model
     public function mecanico()
     {
         return $this->belongsTo(User::class, 'mecanico_id');
+    }
+
+    public function piezas()
+    {
+        return $this->hasMany(OrdenTrabajoPieza::class);
+    }
+
+    public function proveedorExternoUser()
+    {
+        return $this->belongsTo(User::class, 'proveedor_externo_user_id');
     }
 }

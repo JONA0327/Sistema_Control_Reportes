@@ -16,11 +16,14 @@ class InventoryItem extends Model
         'photo_path',
         'stock_quantity',
         'min_stock',
+        'precio',
+        'comprobante_path',
         'created_at',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
+        'precio' => 'decimal:2',
     ];
 
     public function movements()

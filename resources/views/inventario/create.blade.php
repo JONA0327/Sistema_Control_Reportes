@@ -122,6 +122,78 @@
                     </div>
                 </div>
 
+                {{-- Origen del registro --}}
+                <div class="px-6 py-5" x-data="{ origen: '{{ old('origen_registro', 'nueva_compra') }}' }">
+                    <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                        <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </span>
+                        Origen del registro
+                    </h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="origen_registro" value="nueva_compra" x-model="origen" class="sr-only peer" checked>
+                            <div class="flex flex-col gap-0.5 px-4 py-3 rounded-xl border border-gray-700/40 bg-gray-900/30 peer-checked:border-red-600/50 peer-checked:bg-red-600/5 transition-all">
+                                <span class="text-sm font-medium text-white">Nueva compra</span>
+                                <span class="text-xs text-gray-500">Se acaba de comprar, requiere precio y ticket</span>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="origen_registro" value="existente" x-model="origen" class="sr-only peer">
+                            <div class="flex flex-col gap-0.5 px-4 py-3 rounded-xl border border-gray-700/40 bg-gray-900/30 peer-checked:border-red-600/50 peer-checked:bg-red-600/5 transition-all">
+                                <span class="text-sm font-medium text-white">Ya existente</span>
+                                <span class="text-xs text-gray-500">Ya estaba en almacén, solo se está registrando</span>
+                            </div>
+                        </label>
+                    </div>
+                    @error('origen_registro')
+                        <p class="mt-1.5 text-xs text-red-400">{{ $message }}</p>
+                    @enderror
+
+                    <div x-show="origen === 'nueva_compra'" x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        {{-- Precio de compra --}}
+                        <div>
+                            <label for="precio" class="block text-xs font-medium text-gray-400 mb-1.5">
+                                Precio de compra <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-sm">$</span>
+                                <input type="number" step="0.01" min="0" id="precio" name="precio" value="{{ old('precio') }}"
+                                       :required="origen === 'nueva_compra'"
+                                       class="w-full pl-7 pr-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('precio') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                                       placeholder="0.00"/>
+                            </div>
+                            @error('precio')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Comprobante / ticket --}}
+                        <div>
+                            <label for="comprobante" class="block text-xs font-medium text-gray-400 mb-1.5">
+                                Comprobante / ticket <span class="text-red-500">*</span>
+                            </label>
+                            <label for="comprobante"
+                                   class="flex items-center justify-center gap-2 w-full px-3.5 py-2.5 border border-dashed {{ $errors->has('comprobante') ? 'border-red-500' : 'border-gray-700' }} rounded-xl cursor-pointer bg-gray-900/40 hover:bg-gray-900/60 hover:border-gray-600 transition-all">
+                                <svg class="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                </svg>
+                                <span class="text-xs text-gray-500">Subir ticket (JPG, PNG o PDF)</span>
+                            </label>
+                            <input type="file" id="comprobante" name="comprobante" accept=".jpg,.jpeg,.png,.pdf" class="hidden"
+                                   :required="origen === 'nueva_compra'"
+                                   onchange="this.previousElementSibling.querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Subir ticket (JPG, PNG o PDF)';"/>
+                            @error('comprobante')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Foto de la refacción --}}
                 <div class="px-6 py-5">
                     <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">

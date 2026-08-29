@@ -1,0 +1,16 @@
+<?php
+require __DIR__ . '/vendor/autoload.php';
+$app = require __DIR__ . '/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+try {
+    \Illuminate\Support\Facades\Mail::raw(
+        'Prueba Resend desde Control_Reportes',
+        function ($m) {
+            $m->to('jona03278@gmail.com')->subject('Test Resend - Control Reportes');
+        }
+    );
+    echo "OK - Correo enviado a jona03278@gmail.com" . PHP_EOL;
+} catch (\Throwable $e) {
+    echo "ERROR: " . $e->getMessage() . PHP_EOL;
+}

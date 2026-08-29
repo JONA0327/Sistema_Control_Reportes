@@ -87,6 +87,26 @@
                             <p class="text-sm text-gray-500 mt-1">Sin asignar</p>
                         @endif
                     </div>
+                    <div class="col-span-2">
+                        <p class="text-xs text-gray-500">Copiloto</p>
+                        @if($bus->copiloto)
+                            <div class="flex items-center gap-2.5 mt-1">
+                                @if($bus->copiloto->foto)
+                                    <img src="{{ Storage::url($bus->copiloto->foto) }}" class="w-7 h-7 rounded-lg object-cover flex-shrink-0"/>
+                                @else
+                                    <div class="brand-gradient w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                        {{ strtoupper(substr($bus->copiloto->name, 0, 1)) }}
+                                    </div>
+                                @endif
+                                <div>
+                                    <p class="text-sm text-white">{{ $bus->copiloto->name }} {{ $bus->copiloto->last_name }}</p>
+                                    <p class="text-xs text-gray-500">{{ $bus->copiloto->carnet }}</p>
+                                </div>
+                            </div>
+                        @else
+                            <p class="text-sm text-gray-500 mt-1">Sin asignar</p>
+                        @endif
+                    </div>
                 </div>
             </div>
             <div class="mt-5 pt-5 border-t border-gray-700/40">

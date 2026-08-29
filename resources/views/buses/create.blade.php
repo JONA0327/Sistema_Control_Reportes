@@ -72,6 +72,21 @@
                             @enderror
                         </div>
 
+                        {{-- Número de asientos --}}
+                        <div>
+                            <label for="num_asientos" class="block text-xs font-medium text-gray-400 mb-1.5">
+                                Número de asientos
+                                <span class="text-xs text-gray-600 font-normal">(opcional)</span>
+                            </label>
+                            <input type="number" id="num_asientos" name="num_asientos" value="{{ old('num_asientos') }}"
+                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('num_asientos') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                                   placeholder="Ej: 64" min="1" max="100"/>
+                            <p class="mt-1 text-xs text-gray-600">Se usará para llenar automáticamente los contratos.</p>
+                            @error('num_asientos')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         {{-- Estado --}}
                         <div class="sm:col-span-2">
                             <label for="status" class="block text-xs font-medium text-gray-400 mb-1.5">
@@ -191,6 +206,36 @@
                             </label>
                             @endforeach
                         </div>
+                    @endif
+                </div>
+
+                {{-- Copiloto --}}
+                <div class="px-6 py-5">
+                    <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                        <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
+                            </svg>
+                        </span>
+                        Copiloto
+                        <span class="text-xs text-gray-600 font-normal">(opcional, segundo operador)</span>
+                    </h2>
+
+                    @if($operadores->isEmpty())
+                        <p class="text-xs text-gray-600">No hay operadores activos disponibles.</p>
+                    @else
+                        <select id="copiloto_id" name="copiloto_id"
+                                class="w-full sm:w-72 px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('copiloto_id') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                            <option value="" class="bg-gray-900">— Sin copiloto —</option>
+                            @foreach($operadores as $op)
+                                <option value="{{ $op->id }}" class="bg-gray-900" {{ old('copiloto_id') == $op->id ? 'selected' : '' }}>
+                                    {{ $op->name }} {{ $op->last_name }} ({{ $op->carnet }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('copiloto_id')
+                            <p class="mt-1.5 text-xs text-red-400">{{ $message }}</p>
+                        @enderror
                     @endif
                 </div>
 

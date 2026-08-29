@@ -2,8 +2,9 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\PasswordResetCode;
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\PasswordResetCodeNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -19,7 +20,7 @@ class PasswordResetTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_reset_password_link_can_be_requested(): void
+    public function test_reset_code_can_be_requested(): void
     {
         Notification::fake();
 
@@ -27,10 +28,18 @@ class PasswordResetTest extends TestCase
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class);
+        Notification::assertSentTo($user, PasswordResetCodeNotification::class);
+        $this->assertDatabaseHas('password_reset_codes', ['email' => $user->email]);
     }
 
-    public function test_reset_password_screen_can_be_rendered(): void
+    public function test_unknown_email_does_not_reveal_account_existence_via_success(): void
+    {
+        $response = $this->post('/forgot-password', ['email' => 'nobody@example.com']);
+
+        $response->assertSessionHasErrors('email');
+    }
+
+    public function test_valid_code_allows_password_reset(): void
     {
         Notification::fake();
 
@@ -38,16 +47,28 @@ class PasswordResetTest extends TestCase
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
-            $response = $this->get('/reset-password/'.$notification->token);
+        Notification::assertSentTo($user, PasswordResetCodeNotification::class, function ($notification) use ($user) {
+            $verify = $this->post('/verify-reset-code', [
+                'email' => $user->email,
+                'code' => $notification->code,
+            ]);
 
-            $response->assertStatus(200);
+            $verify->assertSessionHasNoErrors()->assertRedirect(route('password.reset'));
+
+            $reset = $this->post('/reset-password', [
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ]);
+
+            $reset->assertSessionHasNoErrors()->assertRedirect(route('login'));
+
+            $this->assertTrue($user->fresh()->password !== $user->password);
 
             return true;
         });
     }
 
-    public function test_password_can_be_reset_with_valid_token(): void
+    public function test_invalid_code_is_rejected(): void
     {
         Notification::fake();
 
@@ -55,17 +76,63 @@ class PasswordResetTest extends TestCase
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-            $response = $this->post('/reset-password', [
-                'token' => $notification->token,
+        $response = $this->post('/verify-reset-code', [
+            'email' => $user->email,
+            'code' => '000000',
+        ]);
+
+        $response->assertSessionHasErrors('code');
+    }
+
+    public function test_expired_code_is_rejected(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        PasswordResetCode::where('email', $user->email)->update([
+            'expires_at' => now()->subMinute(),
+        ]);
+
+        Notification::assertSentTo($user, PasswordResetCodeNotification::class, function ($notification) use ($user) {
+            $response = $this->post('/verify-reset-code', [
                 'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
+                'code' => $notification->code,
             ]);
 
-            $response
-                ->assertSessionHasNoErrors()
-                ->assertRedirect(route('login'));
+            $response->assertSessionHasErrors('code');
+
+            return true;
+        });
+    }
+
+    public function test_code_cannot_be_used_twice(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, PasswordResetCodeNotification::class, function ($notification) use ($user) {
+            $this->post('/verify-reset-code', [
+                'email' => $user->email,
+                'code' => $notification->code,
+            ])->assertSessionHasNoErrors();
+
+            $this->post('/reset-password', [
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ]);
+
+            $replay = $this->post('/verify-reset-code', [
+                'email' => $user->email,
+                'code' => $notification->code,
+            ]);
+
+            $replay->assertSessionHasErrors('code');
 
             return true;
         });

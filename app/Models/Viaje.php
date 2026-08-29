@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Viaje extends Model
 {
     protected $fillable = [
+        'contrato_id',
         'no_contrato',
         'bus_id',
         'operador_id',
@@ -24,6 +25,21 @@ class Viaje extends Model
         'fecha_salida' => 'date',
         'fecha_regreso' => 'date',
     ];
+
+    public function getEstaPendienteAttribute(): bool
+    {
+        return is_null($this->operador_id)
+            || is_null($this->origen)
+            || is_null($this->destino)
+            || is_null($this->recorridos)
+            || is_null($this->gastos_entregados)
+            || is_null($this->gasto_diesel_inicio);
+    }
+
+    public function contrato()
+    {
+        return $this->belongsTo(Contrato::class);
+    }
 
     public function bus()
     {

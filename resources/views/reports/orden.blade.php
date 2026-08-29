@@ -85,13 +85,42 @@
                     <span class="text-xs px-2 py-1 rounded-lg bg-gray-700/50 text-gray-300 border border-gray-600/40">{{ \App\Models\Report::CATEGORIAS[$cat] ?? $cat }}</span>
                 @endforeach
             </div>
-            <p class="text-sm text-gray-300 mb-3">{{ $report->description }}</p>
+            @if($report->description_resumen)
+                <div class="mb-3" x-data="{ verOriginal: false }">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        Puntos clave (generado por IA)
+                    </p>
+                    <ul class="space-y-1 text-sm text-gray-200 list-disc list-inside">
+                        @foreach(preg_split('/\r?\n/', trim($report->description_resumen)) as $linea)
+                            @continue(trim($linea) === '')
+                            <li>{{ ltrim(trim($linea), '-• ') }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" @click="verOriginal = !verOriginal" class="mt-2 text-xs text-gray-500 hover:text-gray-300 transition-colors">
+                        <span x-show="!verOriginal">Ver descripción original del operador</span>
+                        <span x-show="verOriginal" x-cloak>Ocultar descripción original</span>
+                    </button>
+                    <p x-show="verOriginal" x-cloak class="mt-1.5 text-sm text-gray-400 italic border-l-2 border-gray-700 pl-3">{{ $report->description }}</p>
+                </div>
+            @else
+                <p class="text-sm text-gray-300 mb-3">{{ $report->description }}</p>
+            @endif
             @if($report->photos->count() > 0)
                 <div class="flex flex-wrap gap-2">
                     @foreach($report->photos as $photo)
                         <a href="{{ Storage::url($photo->evidence_path) }}" target="_blank">
                             <img src="{{ Storage::url($photo->evidence_path) }}" class="w-16 h-16 object-cover rounded-lg border border-gray-700/50"/>
                         </a>
+                    @endforeach
+                </div>
+            @endif
+            @if($report->videos->count() > 0)
+                <div class="flex flex-wrap gap-2 mt-2">
+                    @foreach($report->videos as $video)
+                        <video src="{{ Storage::url($video->evidence_path) }}" class="w-32 h-20 object-cover rounded-lg border border-gray-700/50" controls></video>
                     @endforeach
                 </div>
             @endif
@@ -246,6 +275,28 @@
                         </div>
 
                         <div class="sm:col-span-2">
+                            <label for="proveedor_externo_user_id" class="block text-xs font-medium text-gray-400 mb-1.5">
+                                Cuenta de acceso del taller externo
+                                <span class="text-xs text-gray-600 font-normal">(opcional)</span>
+                            </label>
+                            @if($mecanicosExternos->isEmpty())
+                                <p class="text-xs text-gray-600">No hay cuentas de mecánico externo creadas. Puedes crear una desde Usuarios con el rol "mecanico_externo".</p>
+                            @else
+                                <select id="proveedor_externo_user_id" name="proveedor_externo_user_id"
+                                        class="w-full px-3.5 py-2.5 bg-gray-900/80 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                                    <option value="" class="bg-gray-900">— Sin asignar —</option>
+                                    @foreach($mecanicosExternos as $mecExt)
+                                        <option value="{{ $mecExt->id }}" class="bg-gray-900"
+                                                {{ old('proveedor_externo_user_id', $orden->proveedor_externo_user_id) == $mecExt->id ? 'selected' : '' }}>
+                                            {{ $mecExt->name }} {{ $mecExt->last_name }} ({{ $mecExt->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1.5 text-xs text-gray-600">Si asignas una cuenta, ese mecánico podrá entrar al sistema y subir la evidencia de las piezas que cambie, sin ver el resto del sistema.</p>
+                            @endif
+                        </div>
+
+                        <div class="sm:col-span-2">
                             <label class="block text-xs font-medium text-gray-400 mb-1.5">Motivo del envío externo</label>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 @foreach(\App\Models\OrdenTrabajo::MOTIVOS_EXTERNO as $key => $label)
@@ -361,6 +412,8 @@
             @endif
         </div>
         @endif
+
+        @include('reports._orden_piezas')
 
         {{-- Cierre de la orden --}}
         <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl p-5">

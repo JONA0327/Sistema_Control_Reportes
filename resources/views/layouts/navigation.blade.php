@@ -23,6 +23,29 @@
         </div>
         <div x-show="!sidebarOpen" class="border-t border-gray-800/60 my-2 mx-2"></div>
 
+        @role('mecanico_externo')
+        {{-- Mis órdenes (mecánico externo) --}}
+        <a href="{{ route('reports.orden.externo.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
+                  {{ request()->routeIs('reports.orden.externo.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('reports.orden.externo.*') ? 'text-red-400' : 'text-gray-500 group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span x-show="sidebarOpen"
+                  x-transition:enter="transition-opacity duration-150 delay-75"
+                  x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                  x-transition:leave="transition-opacity duration-75" x-transition:leave-end="opacity-0"
+                  class="text-sm font-medium whitespace-nowrap">
+                Mis órdenes
+            </span>
+            <div x-show="!sidebarOpen"
+                 class="absolute left-full ml-3 px-2 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                Mis órdenes
+            </div>
+        </a>
+        @endrole
+
+        @unlessrole('mecanico_externo')
         {{-- Dashboard --}}
         <a href="{{ route('dashboard') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
@@ -44,6 +67,7 @@
                 Dashboard
             </div>
         </a>
+        @endunlessrole
 
         {{-- Gastos (solo operador) --}}
         @role('operador')
@@ -185,6 +209,68 @@
                 Inventario
             </div>
         </a>
+
+        {{-- Egresos e Ingresos --}}
+        <a href="{{ route('ingresos-egresos.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
+                  {{ request()->routeIs('ingresos-egresos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('ingresos-egresos.*') ? 'text-red-400' : 'text-gray-500 group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span x-show="sidebarOpen"
+                  x-transition:enter="transition-opacity duration-150 delay-75"
+                  x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                  x-transition:leave="transition-opacity duration-75" x-transition:leave-end="opacity-0"
+                  class="text-sm font-medium whitespace-nowrap flex-1">
+                Egresos y Ingresos
+            </span>
+            <div x-show="!sidebarOpen"
+                 class="absolute left-full ml-3 px-2 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                Egresos y Ingresos
+            </div>
+        </a>
+
+        {{-- Contratos --}}
+        <a href="{{ route('contratos.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
+                  {{ request()->routeIs('contratos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('contratos.*') ? 'text-red-400' : 'text-gray-500 group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            <span x-show="sidebarOpen"
+                  x-transition:enter="transition-opacity duration-150 delay-75"
+                  x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                  x-transition:leave="transition-opacity duration-75" x-transition:leave-end="opacity-0"
+                  class="text-sm font-medium whitespace-nowrap flex-1">
+                Contratos
+            </span>
+            <div x-show="!sidebarOpen"
+                 class="absolute left-full ml-3 px-2 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                Contratos
+            </div>
+        </a>
+
+        {{-- Contratos históricos --}}
+        <a href="{{ route('contratos-historicos.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
+                  {{ request()->routeIs('contratos-historicos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('contratos-historicos.*') ? 'text-red-400' : 'text-gray-500 group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span x-show="sidebarOpen"
+                  x-transition:enter="transition-opacity duration-150 delay-75"
+                  x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                  x-transition:leave="transition-opacity duration-75" x-transition:leave-end="opacity-0"
+                  class="text-sm font-medium whitespace-nowrap flex-1">
+                Contratos históricos
+            </span>
+            <div x-show="!sidebarOpen"
+                 class="absolute left-full ml-3 px-2 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                Contratos históricos
+            </div>
+        </a>
         @endhasanyrole
 
         {{-- Separador configuración --}}
@@ -258,6 +344,16 @@
     </div>
 
     <nav class="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
+        @role('mecanico_externo')
+        <a href="{{ route('reports.orden.externo.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl {{ request()->routeIs('reports.orden.externo.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }} transition-all">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span class="text-sm font-medium">Mis órdenes</span>
+        </a>
+        @endrole
+        @unlessrole('mecanico_externo')
         <a href="{{ route('dashboard') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl {{ request()->routeIs('dashboard') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }} transition-all">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,6 +362,7 @@
             </svg>
             <span class="text-sm font-medium">Dashboard</span>
         </a>
+        @endunlessrole
         @role('operador')
         <a href="{{ route('gastos.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
@@ -326,6 +423,32 @@
                       d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
             </svg>
             <span class="text-sm font-medium">Inventario</span>
+        </a>
+        <a href="{{ route('ingresos-egresos.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
+                  {{ request()->routeIs('ingresos-egresos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span class="text-sm font-medium">Egresos y Ingresos</span>
+        </a>
+        <a href="{{ route('contratos.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
+                  {{ request()->routeIs('contratos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-sm font-medium">Contratos</span>
+        </a>
+        <a href="{{ route('contratos-historicos.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
+                  {{ request()->routeIs('contratos-historicos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span class="text-sm font-medium">Contratos históricos</span>
         </a>
         @endhasanyrole
     </nav>

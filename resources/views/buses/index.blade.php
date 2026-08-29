@@ -116,7 +116,12 @@
                                     @endif
                                     <div class="min-w-0">
                                         <p class="text-sm text-white truncate">{{ $bus->operator->name }} {{ $bus->operator->last_name }}</p>
-                                        <p class="text-xs text-gray-500 truncate">{{ $bus->operator->carnet }}</p>
+                                        <p class="text-xs text-gray-500 truncate">
+                                            {{ $bus->operator->carnet }}
+                                            @if($bus->copiloto)
+                                                · Copiloto: {{ $bus->copiloto->name }} {{ $bus->copiloto->last_name }}
+                                            @endif
+                                        </p>
                                     </div>
                                     @if($bus->pending_loans_count > 0)
                                         <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg border font-medium bg-amber-500/10 text-amber-400 border-amber-500/20 flex-shrink-0"

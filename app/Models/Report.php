@@ -15,6 +15,7 @@ class Report extends Model
         'categorias',
         'urgencia',
         'description',
+        'description_resumen',
         'status',
         'created_at',
         'notified_to_agency_at',
@@ -29,12 +30,14 @@ class Report extends Model
     ];
 
     const CATEGORIAS = [
-        'frenos_aire'            => 'Frenos / Aire',
-        'motor_manejo'           => 'Motor / Manejo',
-        'direccion_suspension'   => 'Dirección / Suspensión',
-        'transmision_clutch'     => 'Transmisión / Clutch',
+        'frenos_aire'            => 'Frenos / Aire (Secador, Válvulas, Balatas, Cámaras)',
+        'motor_manejo'           => 'Motor / Manejo (Inyección, Turbo, Enfriamiento, Admisión)',
+        'emisiones'              => 'Sistema de Emisiones (DEF / AdBlue, DPF, EGR)',
+        'direccion_suspension'   => 'Dirección / Suspensión (Bolsas de aire, Caja de dirección, Muelles)',
+        'transmision_clutch'     => 'Transmisión / Clutch (Caja de cambios, Diferencial, Cardán)',
         'llantas'                => 'Llantas',
-        'electrico_luces'        => 'Eléctrico / Luces',
+        'electrico_luces'        => 'Eléctrico / Luces (Baterías, Alternador, Sensores, Arnés)',
+        'aire_acondicionado'     => 'Aire Acondicionado / HVAC',
         'pasajeros_carroceria'   => 'Pasajeros / Carrocería',
         'fugas'                  => 'Fugas',
     ];
@@ -68,6 +71,11 @@ class Report extends Model
     public function photos()
     {
         return $this->hasMany(ReportEvidence::class)->where('evidence_type', 'foto');
+    }
+
+    public function videos()
+    {
+        return $this->hasMany(ReportEvidence::class)->where('evidence_type', 'video');
     }
 
     public function ordenTrabajo()

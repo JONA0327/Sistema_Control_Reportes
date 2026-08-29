@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\BusController;
+use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\ContratoHistoricoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DieselCargaController;
+use App\Http\Controllers\IngresoEgresoController;
 use App\Http\Controllers\InventoryItemController;
 use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\NotificationController;
@@ -34,7 +37,13 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:administrador|administracion')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
         Route::resource('buses', BusController::class);
-        Route::resource('viajes', ViajeController::class)->except(['show', 'index']);
+        Route::resource('viajes', ViajeController::class)->only(['edit', 'update', 'destroy']);
+        Route::resource('ingresos-egresos', IngresoEgresoController::class)->parameters(['ingresos-egresos' => 'movimiento'])->except(['show']);
+        Route::get('contratos/{contrato}/pdf', [ContratoController::class, 'exportPdf'])->name('contratos.pdf');
+        Route::post('contratos/{contrato}/pagos', [ContratoController::class, 'storePago'])->name('contratos.pagos.store');
+        Route::delete('contratos/pagos/{pago}', [ContratoController::class, 'destroyPago'])->name('contratos.pagos.destroy');
+        Route::resource('contratos', ContratoController::class)->except(['show']);
+        Route::resource('contratos-historicos', ContratoHistoricoController::class)->parameters(['contratos-historicos' => 'contrato'])->except(['show', 'create']);
     });
 
     Route::middleware('role:administrador|administracion|operador')->group(function () {
@@ -81,6 +90,17 @@ Route::middleware('auth')->group(function () {
         Route::get('reports/{report}/orden-trabajo/pdf', [OrdenTrabajoController::class, 'exportPdf'])->name('reports.orden.pdf');
         Route::post('reports/{report}/orden-trabajo/partes', [OrdenTrabajoController::class, 'storeParte'])->name('reports.orden.partes.store');
         Route::delete('orden-trabajo/partes/{parte}', [OrdenTrabajoController::class, 'destroyParte'])->name('reports.orden.partes.destroy');
+    });
+
+    // Piezas y evidencia: taller interno (mecánico/admin) y taller externo (mecánico externo, solo su propia orden).
+    Route::middleware('role:administrador|administracion|mecanico|mecanico_externo')->group(function () {
+        Route::post('reports/{report}/orden-trabajo/piezas', [OrdenTrabajoController::class, 'storePieza'])->name('reports.orden.piezas.store');
+        Route::delete('orden-trabajo/piezas/{pieza}', [OrdenTrabajoController::class, 'destroyPieza'])->name('reports.orden.piezas.destroy');
+    });
+
+    Route::middleware('role:mecanico_externo')->group(function () {
+        Route::get('mi-taller', [OrdenTrabajoController::class, 'externoIndex'])->name('reports.orden.externo.index');
+        Route::get('mi-taller/{report}', [OrdenTrabajoController::class, 'externoShow'])->name('reports.orden.externo.show');
     });
 });
 

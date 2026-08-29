@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\IngresoEgreso;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
 use App\Models\User;
@@ -36,13 +37,16 @@ class InventoryItemController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'code'           => ['required', 'string', 'max:255', 'unique:inventory_items'],
-            'name'           => ['required', 'string', 'max:255'],
-            'description'    => ['nullable', 'string', 'max:1000'],
-            'category'       => ['required', 'string', 'max:255'],
-            'foto'           => ['nullable', 'image', 'max:2048'],
-            'stock_quantity' => ['required', 'integer', 'min:0'],
-            'min_stock'      => ['required', 'integer', 'min:0'],
+            'code'            => ['required', 'string', 'max:255', 'unique:inventory_items'],
+            'name'            => ['required', 'string', 'max:255'],
+            'description'     => ['nullable', 'string', 'max:1000'],
+            'category'        => ['required', 'string', 'max:255'],
+            'foto'            => ['nullable', 'image', 'max:2048'],
+            'stock_quantity'  => ['required', 'integer', 'min:0'],
+            'min_stock'       => ['required', 'integer', 'min:0'],
+            'origen_registro' => ['required', Rule::in(['nueva_compra', 'existente'])],
+            'precio'          => ['required_if:origen_registro,nueva_compra', 'nullable', 'numeric', 'min:0'],
+            'comprobante'     => ['required_if:origen_registro,nueva_compra', 'nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
         ]);
 
         if ($request->hasFile('foto')) {
@@ -50,9 +54,27 @@ class InventoryItemController extends Controller
         }
         unset($data['foto']);
 
+        if ($data['origen_registro'] === 'existente') {
+            $data['precio'] = null;
+        } elseif ($request->hasFile('comprobante')) {
+            $data['comprobante_path'] = $request->file('comprobante')->store('inventario/comprobantes', 'public');
+        }
+        unset($data['comprobante'], $data['origen_registro']);
+
         $data['created_at'] = now();
 
         $item = InventoryItem::create($data);
+
+        if ($item->precio > 0) {
+            IngresoEgreso::registrarDesdeOrigen($item, [
+                'tipo' => 'egreso',
+                'concepto' => "Compra de refacción: {$item->name} ({$item->code})",
+                'monto' => $item->precio,
+                'fecha' => now(),
+                'categoria' => 'Inventario',
+                'user_id' => $request->user()->id,
+            ]);
+        }
 
         return redirect()->route('inventario.index')
             ->with('success', "Refacción \"{$item->name}\" registrada correctamente.");
@@ -105,6 +127,10 @@ class InventoryItemController extends Controller
         if ($item->photo_path) {
             Storage::disk('public')->delete($item->photo_path);
         }
+        if ($item->comprobante_path) {
+            Storage::disk('public')->delete($item->comprobante_path);
+        }
+        IngresoEgreso::eliminarDesdeOrigen($item);
 
         $item->delete();
 

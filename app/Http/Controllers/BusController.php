@@ -14,7 +14,7 @@ class BusController extends Controller
     {
         $search = $request->get('search');
 
-        $buses = Bus::with('operator')
+        $buses = Bus::with(['operator', 'copiloto'])
             ->withCount('pendingLoans')
             ->when($search, fn($q) => $q
                 ->where('num_bus', 'like', "%{$search}%")
@@ -36,7 +36,7 @@ class BusController extends Controller
 
     public function show(Bus $bus)
     {
-        $bus->load('operator');
+        $bus->load(['operator', 'copiloto']);
         $prestamos = $bus->pendingLoans()->with('item')->orderByDesc('movement_date')->get();
 
         return view('buses.show', compact('bus', 'prestamos'));
@@ -45,11 +45,13 @@ class BusController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'num_bus'     => ['required', 'integer', 'unique:buses'],
-            'placa'       => ['required', 'string', 'max:20', 'unique:buses'],
-            'status'      => ['required', 'string', Rule::in(['activo', 'inactivo', 'mantenimiento'])],
-            'operator_id' => ['nullable', 'exists:users,id'],
-            'foto'        => ['nullable', 'image', 'max:2048'],
+            'num_bus'      => ['required', 'integer', 'unique:buses'],
+            'placa'        => ['required', 'string', 'max:20', 'unique:buses'],
+            'num_asientos' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'status'       => ['required', 'string', Rule::in(['activo', 'inactivo', 'mantenimiento'])],
+            'operator_id'  => ['nullable', 'exists:users,id'],
+            'copiloto_id'  => ['nullable', 'exists:users,id', 'different:operator_id'],
+            'foto'         => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($request->hasFile('foto')) {
@@ -71,11 +73,13 @@ class BusController extends Controller
     public function update(Request $request, Bus $bus)
     {
         $data = $request->validate([
-            'num_bus'     => ['required', 'integer', Rule::unique('buses')->ignore($bus->id)],
-            'placa'       => ['required', 'string', 'max:20', Rule::unique('buses')->ignore($bus->id)],
-            'status'      => ['required', 'string', Rule::in(['activo', 'inactivo', 'mantenimiento'])],
-            'operator_id' => ['nullable', 'exists:users,id'],
-            'foto'        => ['nullable', 'image', 'max:2048'],
+            'num_bus'      => ['required', 'integer', Rule::unique('buses')->ignore($bus->id)],
+            'placa'        => ['required', 'string', 'max:20', Rule::unique('buses')->ignore($bus->id)],
+            'num_asientos' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'status'       => ['required', 'string', Rule::in(['activo', 'inactivo', 'mantenimiento'])],
+            'operator_id'  => ['nullable', 'exists:users,id'],
+            'copiloto_id'  => ['nullable', 'exists:users,id', 'different:operator_id'],
+            'foto'         => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($request->hasFile('foto')) {

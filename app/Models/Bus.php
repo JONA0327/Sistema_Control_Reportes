@@ -11,14 +11,21 @@ class Bus extends Model
     protected $fillable = [
         'num_bus',
         'placa',
+        'num_asientos',
         'foto',
         'operator_id',
+        'copiloto_id',
         'status',
     ];
 
     public function operator()
     {
         return $this->belongsTo(User::class, 'operator_id');
+    }
+
+    public function copiloto()
+    {
+        return $this->belongsTo(User::class, 'copiloto_id');
     }
 
     public function pendingLoans()
