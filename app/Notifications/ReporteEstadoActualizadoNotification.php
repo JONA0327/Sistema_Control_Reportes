@@ -38,7 +38,7 @@ class ReporteEstadoActualizadoNotification extends Notification implements Shoul
     public function toArray(object $notifiable): array
     {
         $puedeVerOrden = method_exists($notifiable, 'hasAnyRole')
-            && $notifiable->hasAnyRole(['administrador', 'administracion', 'mecanico']);
+            && $notifiable->hasAnyRole(['superadmin', 'administracion', 'mecanico']);
 
         return [
             'title'   => "Reporte {$this->report->folio} actualizado",

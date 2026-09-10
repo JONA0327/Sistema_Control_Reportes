@@ -99,8 +99,9 @@
                         {{-- Stock inicial --}}
                         <div>
                             <label for="stock_quantity" class="block text-xs font-medium text-gray-400 mb-1.5">
-                                Stock inicial <span class="text-red-500">*</span>
+                                Cantidad <span class="text-red-500">*</span>
                             </label>
+                            <p class="text-xs text-gray-600 mb-1.5">Si es compra nueva, la cantidad que estás comprando.</p>
                             <input type="number" id="stock_quantity" name="stock_quantity" min="0" value="{{ old('stock_quantity', 0) }}"
                                    class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('stock_quantity') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"/>
                             @error('stock_quantity')
@@ -153,6 +154,13 @@
                     @error('origen_registro')
                         <p class="mt-1.5 text-xs text-red-400">{{ $message }}</p>
                     @enderror
+
+                    <div x-show="origen === 'nueva_compra'" x-cloak class="mt-3 flex items-start gap-2 px-3.5 py-2.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                        <svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <p class="text-xs text-amber-300">La refacción se agrega al catálogo de inmediato, pero el stock no se suma hasta que administración valide el ticket de la compra.</p>
+                    </div>
 
                     <div x-show="origen === 'nueva_compra'" x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                         {{-- Precio de compra --}}

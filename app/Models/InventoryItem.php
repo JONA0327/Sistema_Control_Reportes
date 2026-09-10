@@ -31,6 +31,11 @@ class InventoryItem extends Model
         return $this->hasMany(InventoryMovement::class, 'item_id');
     }
 
+    public function purchases()
+    {
+        return $this->hasMany(InventoryPurchase::class, 'item_id');
+    }
+
     public function getLowStockAttribute(): bool
     {
         return $this->stock_quantity <= $this->min_stock;

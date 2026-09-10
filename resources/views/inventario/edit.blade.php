@@ -38,6 +38,7 @@
     <div class="max-w-2xl space-y-4">
 
         {{-- Datos de la refacción --}}
+        @can('inventario.editar')
         <form method="POST" action="{{ route('inventario.update', $item) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
@@ -164,6 +165,7 @@
                 </div>
             </div>
         </form>
+        @endcan
 
         {{-- Stock actual + registrar movimiento --}}
         <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl divide-y divide-gray-700/40">
@@ -318,6 +320,142 @@
                     </div>
                 @endif
             </div>
+        </div>
+
+        {{-- Comprar más stock (con ticket, requiere validación de administración) --}}
+        <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl divide-y divide-gray-700/40">
+            <div class="px-6 py-5">
+                <h2 class="text-sm font-semibold text-white mb-1 flex items-center gap-2">
+                    <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center flex-shrink-0">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </span>
+                    Comprar más stock
+                </h2>
+                <p class="text-xs text-gray-600 mb-4">Sube el ticket de la compra. El stock no se suma hasta que administración lo valide y elija si el gasto es de México o USA.</p>
+
+                <form method="POST" action="{{ route('inventario.compras.store', $item) }}" enctype="multipart/form-data" class="space-y-3"
+                      x-data="{ preview: null, fileName: '', setFile(file) { if (!file) return; this.preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : null; this.fileName = file.name; }, clearFile() { this.preview = null; this.fileName = ''; document.getElementById('compra_comprobante').value = ''; } }">
+                    @csrf
+                    <div class="flex flex-wrap gap-3">
+                        <div>
+                            <label for="compra_quantity" class="block text-xs font-medium text-gray-400 mb-1.5">Cantidad comprada <span class="text-red-500">*</span></label>
+                            <input type="number" id="compra_quantity" name="quantity" min="1" value="{{ old('quantity') }}"
+                                   class="w-28 px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('quantity') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"/>
+                            @error('quantity')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="flex-1 min-w-32">
+                            <label for="compra_precio" class="block text-xs font-medium text-gray-400 mb-1.5">Precio de compra <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-sm">$</span>
+                                <input type="number" step="0.01" min="0" id="compra_precio" name="precio" value="{{ old('precio') }}"
+                                       class="w-full pl-7 pr-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('precio') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                                       placeholder="0.00"/>
+                            </div>
+                            @error('precio')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="flex-1 min-w-40">
+                            <label for="compra_notas" class="block text-xs font-medium text-gray-400 mb-1.5">Notas <span class="text-gray-600 font-normal">(opcional)</span></label>
+                            <input type="text" id="compra_notas" name="notas" value="{{ old('notas') }}"
+                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                                   placeholder="Ej: Comprado en refaccionaria López"/>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">
+                            Ticket / comprobante <span class="text-red-500">*</span>
+                        </label>
+
+                        <div x-show="!fileName">
+                            <label for="compra_comprobante"
+                                   class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed {{ $errors->has('comprobante') ? 'border-red-500' : 'border-gray-700' }} rounded-xl cursor-pointer bg-gray-900/40 hover:bg-gray-900/60 hover:border-red-600/50 transition-all"
+                                   @dragover.prevent @drop.prevent="setFile($event.dataTransfer.files[0])">
+                                <svg class="w-6 h-6 text-gray-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                </svg>
+                                <p class="text-xs text-gray-500">📷 Tomar foto o <span class="text-red-400">adjuntar ticket</span> (JPG, PNG o PDF)</p>
+                            </label>
+                        </div>
+
+                        <div x-show="fileName" x-cloak class="flex items-center gap-3 px-3.5 py-2.5 bg-gray-900/40 border border-gray-700/50 rounded-xl">
+                            <img x-show="preview" :src="preview" class="w-14 h-14 object-cover rounded-lg border border-gray-700/50 flex-shrink-0" alt="Vista previa"/>
+                            <span class="text-xs text-gray-300 truncate flex-1" x-text="fileName"></span>
+                            <button type="button" @click="clearFile()" class="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0" title="Quitar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <input type="file" id="compra_comprobante" name="comprobante" accept=".jpg,.jpeg,.png,.pdf" class="hidden"
+                               @change="setFile($event.target.files[0])"/>
+                        @error('comprobante')
+                            <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit"
+                                class="px-4 py-2.5 brand-gradient text-white text-sm font-semibold rounded-xl shadow-lg shadow-red-950/40 hover:opacity-90 transition-opacity">
+                            Registrar compra
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            @if($purchases->isNotEmpty())
+            <div class="px-6 py-5">
+                <h2 class="text-sm font-semibold text-white mb-4">Compras registradas</h2>
+                <div class="space-y-2">
+                    @foreach($purchases as $compra)
+                    <div class="px-3.5 py-2.5 bg-gray-900/40 border border-gray-700/40 rounded-xl">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-start gap-2.5">
+                                <a href="{{ Storage::url($compra->comprobante_path) }}" target="_blank" class="flex-shrink-0">
+                                    <div class="w-10 h-10 rounded-lg border border-gray-700/50 bg-gray-800 flex items-center justify-center overflow-hidden">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </div>
+                                </a>
+                                <div>
+                                    <p class="text-sm text-gray-200">{{ $compra->quantity }} unidades · ${{ number_format($compra->precio, 2) }}</p>
+                                    <p class="text-xs text-gray-500">
+                                        Solicitado por {{ $compra->solicitadoPor->name }} {{ $compra->solicitadoPor->last_name }} · {{ $compra->created_at->format('d/m/Y H:i') }}
+                                    </p>
+                                    @if($compra->notas)
+                                        <p class="text-xs text-gray-600 mt-0.5">{{ $compra->notas }}</p>
+                                    @endif
+                                    @if($compra->estado === 'rechazada' && $compra->motivo_rechazo)
+                                        <p class="text-xs text-red-400 mt-0.5">Motivo: {{ $compra->motivo_rechazo }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                            @php
+                                $estadoBadge = match($compra->estado) {
+                                    'aprobada'  => 'bg-green-500/10 text-green-400 border-green-500/20',
+                                    'rechazada' => 'bg-red-500/10 text-red-400 border-red-500/20',
+                                    default     => 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                                };
+                            @endphp
+                            <span class="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-lg border font-medium whitespace-nowrap flex-shrink-0 {{ $estadoBadge }}">
+                                {{ \App\Models\InventoryPurchase::ESTADOS[$compra->estado] ?? $compra->estado }}
+                                @if($compra->estado === 'aprobada' && $compra->pais)
+                                    · {{ \App\Models\IngresoEgreso::PAISES[$compra->pais] ?? $compra->pais }}
+                                @endif
+                            </span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 

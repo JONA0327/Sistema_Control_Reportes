@@ -14,6 +14,9 @@ class Report extends Model
         'km_actual',
         'categorias',
         'urgencia',
+        'frecuencia',
+        'condiciones',
+        'sintomas',
         'description',
         'description_resumen',
         'status',
@@ -24,6 +27,8 @@ class Report extends Model
 
     protected $casts = [
         'categorias'             => 'array',
+        'condiciones'            => 'array',
+        'sintomas'               => 'array',
         'created_at'            => 'datetime',
         'notified_to_agency_at' => 'datetime',
         'resolved_at'           => 'datetime',
@@ -46,6 +51,31 @@ class Report extends Model
         'verde'    => 'Ruta normal',
         'amarillo' => 'Revisión prioritaria',
         'rojo'     => 'Unidad detenida',
+    ];
+
+    const CONDICIONES = [
+        'arranque' => 'Al arrancar el motor',
+        'marcha'   => 'Mientras circula en ruta',
+        'frenado'  => 'Al frenar',
+        'curva'    => 'Al dar vuelta / en curva',
+        'carga'    => 'Con pasajeros o carga / en pendiente',
+        'reposo'   => 'Estando detenida / en reposo',
+    ];
+
+    const SINTOMAS = [
+        'ruido'     => 'Ruido anormal',
+        'olor'      => 'Olor a quemado o combustible',
+        'humo'      => 'Humo',
+        'vibracion' => 'Vibración',
+        'fuga'      => 'Fuga de algún líquido',
+        'testigo'   => 'Luz / testigo encendido en el tablero',
+        'ninguno'   => 'Ninguno de los anteriores',
+    ];
+
+    const FRECUENCIAS = [
+        'primera_vez'   => 'Es la primera vez',
+        'intermitente'  => 'Va y viene (intermitente)',
+        'constante'     => 'Pasa todo el tiempo',
     ];
 
     public function getFolioAttribute(): string

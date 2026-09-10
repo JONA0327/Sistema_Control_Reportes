@@ -109,6 +109,60 @@
                         </div>
 
                         <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1.5">¿Con qué frecuencia pasa?</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                @foreach(\App\Models\Report::FRECUENCIAS as $key => $label)
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="frecuencia" value="{{ $key }}" class="sr-only peer"
+                                           {{ old('frecuencia', $report->frecuencia) === $key ? 'checked' : '' }}>
+                                    <div class="flex items-center justify-center text-center px-3 py-2.5 rounded-xl border border-gray-700 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-600/10 transition-all h-full">
+                                        <span class="text-xs font-medium text-gray-300">{{ $label }}</span>
+                                    </div>
+                                </label>
+                                @endforeach
+                            </div>
+                            @error('frecuencia')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1.5">¿Cuándo ocurre? <span class="text-gray-600 font-normal">(una o varias)</span></label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                @foreach(\App\Models\Report::CONDICIONES as $key => $label)
+                                @php $checked = in_array($key, old('condiciones', $report->condiciones ?? [])); @endphp
+                                <label class="relative cursor-pointer">
+                                    <input type="checkbox" name="condiciones[]" value="{{ $key }}" class="sr-only peer" {{ $checked ? 'checked' : '' }}>
+                                    <div class="px-3.5 py-2.5 rounded-xl border border-gray-700 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-600/10 transition-all">
+                                        <span class="text-sm text-gray-300">{{ $label }}</span>
+                                    </div>
+                                </label>
+                                @endforeach
+                            </div>
+                            @error('condiciones')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1.5">¿Qué se percibe? <span class="text-gray-600 font-normal">(una o varias)</span></label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                @foreach(\App\Models\Report::SINTOMAS as $key => $label)
+                                @php $checked = in_array($key, old('sintomas', $report->sintomas ?? [])); @endphp
+                                <label class="relative cursor-pointer">
+                                    <input type="checkbox" name="sintomas[]" value="{{ $key }}" class="sr-only peer" {{ $checked ? 'checked' : '' }}>
+                                    <div class="px-3.5 py-2.5 rounded-xl border border-gray-700 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-600/10 transition-all">
+                                        <span class="text-sm text-gray-300">{{ $label }}</span>
+                                    </div>
+                                </label>
+                                @endforeach
+                            </div>
+                            @error('sintomas')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
                             <label for="description" class="block text-xs font-medium text-gray-400 mb-1.5">
                                 Descripción <span class="text-red-500">*</span>
                             </label>
@@ -142,7 +196,7 @@
                             @enderror
                         </div>
 
-                        @hasanyrole('administrador|administracion')
+                        @can('reportes.estado')
                         <div>
                             <label class="block text-xs font-medium text-gray-400 mb-1.5">Estado de seguimiento <span class="text-red-500">*</span></label>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -162,7 +216,7 @@
                                 @endforeach
                             </div>
                         </div>
-                        @endhasanyrole
+                        @endcan
                     </div>
                 </div>
 

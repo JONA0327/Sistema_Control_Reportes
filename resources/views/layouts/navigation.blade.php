@@ -23,7 +23,7 @@
         </div>
         <div x-show="!sidebarOpen" class="border-t border-gray-800/60 my-2 mx-2"></div>
 
-        @role('mecanico_externo')
+        @hasrole('mecanico_externo')
         {{-- Mis órdenes (mecánico externo) --}}
         <a href="{{ route('reports.orden.externo.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
@@ -43,7 +43,7 @@
                 Mis órdenes
             </div>
         </a>
-        @endrole
+        @endhasrole
 
         @unlessrole('mecanico_externo')
         {{-- Dashboard --}}
@@ -70,7 +70,7 @@
         @endunlessrole
 
         {{-- Gastos (solo operador) --}}
-        @role('operador')
+        @can('gastos.registrar')
         <a href="{{ route('gastos.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
                   {{ request()->routeIs('gastos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
@@ -90,7 +90,7 @@
                 Gastos
             </div>
         </a>
-        @endrole
+        @endcan
 
         {{-- Separador sección gestión --}}
         <div class="pt-4 pb-1">
@@ -100,7 +100,7 @@
             <div x-show="!sidebarOpen" class="border-t border-gray-800/60 mx-2"></div>
         </div>
 
-        @hasanyrole('administrador|administracion')
+        @can('usuarios.ver')
         {{-- Usuarios --}}
         <a href="{{ route('users.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
@@ -121,7 +121,9 @@
                 Usuarios
             </div>
         </a>
+        @endcan
 
+        @can('unidades.ver')
         {{-- Unidades --}}
         <a href="{{ route('buses.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
@@ -142,8 +144,9 @@
                 Unidades
             </div>
         </a>
-        @endhasanyrole
+        @endcan
 
+        @can('reportes.ver')
         {{-- Reportes --}}
         <a href="{{ route('reports.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
@@ -164,8 +167,9 @@
                 Reportes
             </div>
         </a>
+        @endcan
 
-        @unlessrole('mecanico')
+        @can('viajes.ver')
         {{-- Viajes --}}
         <a href="{{ route('viajes.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
@@ -186,9 +190,9 @@
                 Viajes
             </div>
         </a>
-        @endunlessrole
+        @endcan
 
-        @hasanyrole('administrador|administracion')
+        @can('inventario.ver')
         {{-- Inventario --}}
         <a href="{{ route('inventario.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
@@ -209,7 +213,9 @@
                 Inventario
             </div>
         </a>
+        @endcan
 
+        @can('egresos_ingresos.ver')
         {{-- Egresos e Ingresos --}}
         <a href="{{ route('ingresos-egresos.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
@@ -230,7 +236,9 @@
                 Egresos y Ingresos
             </div>
         </a>
+        @endcan
 
+        @can('contratos.ver')
         {{-- Contratos --}}
         <a href="{{ route('contratos.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
@@ -251,7 +259,9 @@
                 Contratos
             </div>
         </a>
+        @endcan
 
+        @can('contratos_historicos.ver')
         {{-- Contratos históricos --}}
         <a href="{{ route('contratos-historicos.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
@@ -271,7 +281,7 @@
                 Contratos históricos
             </div>
         </a>
-        @endhasanyrole
+        @endcan
 
         {{-- Separador configuración --}}
         <div class="pt-4 pb-1">
@@ -344,7 +354,7 @@
     </div>
 
     <nav class="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
-        @role('mecanico_externo')
+        @hasrole('mecanico_externo')
         <a href="{{ route('reports.orden.externo.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl {{ request()->routeIs('reports.orden.externo.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }} transition-all">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -352,7 +362,7 @@
             </svg>
             <span class="text-sm font-medium">Mis órdenes</span>
         </a>
-        @endrole
+        @endhasrole
         @unlessrole('mecanico_externo')
         <a href="{{ route('dashboard') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl {{ request()->routeIs('dashboard') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }} transition-all">
@@ -363,7 +373,7 @@
             <span class="text-sm font-medium">Dashboard</span>
         </a>
         @endunlessrole
-        @role('operador')
+        @can('gastos.registrar')
         <a href="{{ route('gastos.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                   {{ request()->routeIs('gastos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
@@ -373,8 +383,8 @@
             </svg>
             <span class="text-sm font-medium">Gastos</span>
         </a>
-        @endrole
-        @hasanyrole('administrador|administracion')
+        @endcan
+        @can('usuarios.ver')
         <a href="{{ route('users.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                   {{ request()->routeIs('users.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
@@ -384,6 +394,8 @@
             </svg>
             <span class="text-sm font-medium">Usuarios</span>
         </a>
+        @endcan
+        @can('unidades.ver')
         <a href="{{ route('buses.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                   {{ request()->routeIs('buses.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
@@ -393,7 +405,8 @@
             </svg>
             <span class="text-sm font-medium">Unidades</span>
         </a>
-        @endhasanyrole
+        @endcan
+        @can('reportes.ver')
         <a href="{{ route('reports.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                   {{ request()->routeIs('reports.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
@@ -403,7 +416,8 @@
             </svg>
             <span class="text-sm font-medium">Reportes</span>
         </a>
-        @unlessrole('mecanico')
+        @endcan
+        @can('viajes.ver')
         <a href="{{ route('viajes.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                   {{ request()->routeIs('viajes.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
@@ -413,8 +427,8 @@
             </svg>
             <span class="text-sm font-medium">Viajes</span>
         </a>
-        @endunlessrole
-        @hasanyrole('administrador|administracion')
+        @endcan
+        @can('inventario.ver')
         <a href="{{ route('inventario.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                   {{ request()->routeIs('inventario.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
@@ -424,6 +438,8 @@
             </svg>
             <span class="text-sm font-medium">Inventario</span>
         </a>
+        @endcan
+        @can('egresos_ingresos.ver')
         <a href="{{ route('ingresos-egresos.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                   {{ request()->routeIs('ingresos-egresos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
@@ -433,6 +449,8 @@
             </svg>
             <span class="text-sm font-medium">Egresos y Ingresos</span>
         </a>
+        @endcan
+        @can('contratos.ver')
         <a href="{{ route('contratos.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                   {{ request()->routeIs('contratos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
@@ -442,6 +460,8 @@
             </svg>
             <span class="text-sm font-medium">Contratos</span>
         </a>
+        @endcan
+        @can('contratos_historicos.ver')
         <a href="{{ route('contratos-historicos.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                   {{ request()->routeIs('contratos-historicos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
@@ -450,6 +470,6 @@
             </svg>
             <span class="text-sm font-medium">Contratos históricos</span>
         </a>
-        @endhasanyrole
+        @endcan
     </nav>
 </aside>

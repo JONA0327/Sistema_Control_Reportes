@@ -112,7 +112,7 @@
                         {{-- Acciones --}}
                         <td class="px-5 py-3">
                             <div class="flex items-center justify-end gap-1.5">
-                                @hasanyrole('administrador|administracion')
+                                @can('gastos.aprobar')
                                 @unless($viaje->esta_pendiente)
                                 <a href="{{ route('viajes.gastos', $viaje) }}"
                                    class="p-2 rounded-lg text-gray-500 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
@@ -144,7 +144,7 @@
                                         </svg>
                                     </button>
                                 </form>
-                                @endhasanyrole
+                                @endcan
                             </div>
                         </td>
                     </tr>

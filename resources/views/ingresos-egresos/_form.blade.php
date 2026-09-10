@@ -99,7 +99,7 @@
                 <select id="pais" name="pais"
                         class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('pais') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
                     @foreach(\App\Models\IngresoEgreso::PAISES as $codigoPais => $nombrePais)
-                        <option value="{{ $codigoPais }}" class="bg-gray-900" {{ old('pais', $movimiento?->pais ?? 'mexico') === $codigoPais ? 'selected' : '' }}>{{ $nombrePais }}</option>
+                        <option value="{{ $codigoPais }}" class="bg-gray-900" {{ old('pais', $movimiento?->pais ?? ($pais ?? 'mexico')) === $codigoPais ? 'selected' : '' }}>{{ $nombrePais }}</option>
                     @endforeach
                 </select>
                 @error('pais')

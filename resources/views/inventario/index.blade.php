@@ -15,13 +15,31 @@
             <h1 class="text-2xl font-bold text-white">Inventario</h1>
             <p class="text-sm text-gray-500 mt-0.5">Catálogo de refacciones y control de stock</p>
         </div>
-        <a href="{{ route('inventario.create') }}"
-           class="brand-gradient inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg shadow-red-950/40 hover:opacity-90 transition-opacity">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Nueva refacción
-        </a>
+        <div class="flex items-center gap-2">
+            @can('inventario.aprobar')
+            @php $comprasPendientes = \App\Models\InventoryPurchase::where('estado', 'pendiente')->count(); @endphp
+            <a href="{{ route('inventario.compras.index') }}"
+               class="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-colors
+                      {{ $comprasPendientes > 0 ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20' : 'bg-gray-800/60 border-gray-700/50 text-gray-400 hover:text-white hover:border-gray-600' }}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Compras pendientes
+                @if($comprasPendientes > 0)
+                    <span class="text-xs px-1.5 py-0.5 rounded-full bg-amber-500/20">{{ $comprasPendientes }}</span>
+                @endif
+            </a>
+            @endcan
+            @can('inventario.crear')
+            <a href="{{ route('inventario.create') }}"
+               class="brand-gradient inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg shadow-red-950/40 hover:opacity-90 transition-opacity">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Nueva refacción
+            </a>
+            @endcan
+        </div>
     </div>
 
     {{-- Alerta --}}
@@ -132,6 +150,7 @@
                                               d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </a>
+                                @can('inventario.eliminar')
                                 <form method="POST" action="{{ route('inventario.destroy', $item) }}"
                                       onsubmit="return confirm('¿Eliminar la refacción {{ $item->code }}? Esta acción no se puede deshacer.')">
                                     @csrf
@@ -145,6 +164,7 @@
                                         </svg>
                                     </button>
                                 </form>
+                                @endcan
                             </div>
                         </td>
                     </tr>

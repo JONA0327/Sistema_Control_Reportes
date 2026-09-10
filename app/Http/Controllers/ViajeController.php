@@ -54,12 +54,18 @@ class ViajeController extends Controller
         $dieselInicial = $viaje->dieselCargas()->where('tipo', 'inicial')->first();
 
         if ($dieselInicial) {
-            $dieselInicial->update(['monto' => $viaje->gasto_diesel_inicio]);
+            $dieselInicial->update([
+                'monto'       => $viaje->gasto_diesel_inicio,
+                'litros'      => $viaje->litros_diesel_inicio,
+                'costo_litro' => $viaje->costo_litro_diesel_inicio,
+            ]);
             IngresoEgreso::actualizarMontoDesdeOrigen($dieselInicial, (float) $viaje->gasto_diesel_inicio);
         } else {
             $dieselInicial = $viaje->dieselCargas()->create([
                 'tipo'             => 'inicial',
                 'monto'            => $viaje->gasto_diesel_inicio,
+                'litros'           => $viaje->litros_diesel_inicio,
+                'costo_litro'      => $viaje->costo_litro_diesel_inicio,
                 'origen'           => 'administracion',
                 'estado_solicitud' => 'aprobada',
                 'requested_by'     => $request->user()->id,
@@ -122,6 +128,7 @@ class ViajeController extends Controller
             'no_contrato'          => ['required', 'string', 'max:255'],
             'bus_id'                => ['required', 'exists:buses,id'],
             'operador_id'           => ['required', 'exists:users,id'],
+            'segundo_operador_id'   => ['nullable', 'exists:users,id', 'different:operador_id'],
             'origen'                => ['required', 'string', 'max:255'],
             'destino'               => ['required', 'string', 'max:255'],
             'recorridos'            => ['required', 'string'],
@@ -130,6 +137,8 @@ class ViajeController extends Controller
             'costo_viaje'           => ['required', 'numeric', 'min:0'],
             'gastos_entregados'     => ['required', 'numeric', 'min:0'],
             'gasto_diesel_inicio'   => ['required', 'numeric', 'min:0'],
+            'litros_diesel_inicio'      => ['nullable', 'numeric', 'min:0'],
+            'costo_litro_diesel_inicio' => ['nullable', 'numeric', 'min:0'],
         ]);
     }
 }

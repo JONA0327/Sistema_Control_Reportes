@@ -233,38 +233,116 @@
             Costos
         </h2>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-                <label for="costo_viaje" class="block text-xs font-medium text-gray-400 mb-1.5">
-                    Costo del viaje <span class="text-red-500">*</span>
-                </label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-sm">$</span>
-                    <input type="number" step="0.01" min="0" id="costo_viaje" name="costo_viaje" value="{{ old('costo_viaje', $contrato?->costo_viaje) }}"
-                           class="w-full pl-7 pr-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('costo_viaje') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-                           placeholder="0.00"/>
-                </div>
-                @error('costo_viaje')
-                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
-                @enderror
+        <div class="max-w-xs">
+            <label for="costo_viaje" class="block text-xs font-medium text-gray-400 mb-1.5">
+                Costo del viaje <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-sm">$</span>
+                <input type="number" step="0.01" min="0" id="costo_viaje" name="costo_viaje" value="{{ old('costo_viaje', $contrato?->costo_viaje) }}"
+                       class="w-full pl-7 pr-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('costo_viaje') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                       placeholder="0.00"/>
+            </div>
+            @error('costo_viaje')
+                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+            @enderror
+        </div>
+    </div>
+
+    {{-- Anticipo inicial: solo al crear el contrato; una vez creado se maneja en "Anticipos formalizados" --}}
+    @unless($contrato)
+    <div class="px-6 py-5">
+        <h2 class="text-sm font-semibold text-white mb-1 flex items-center gap-2">
+            <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center text-white flex-shrink-0">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+            </span>
+            Anticipo inicial
+        </h2>
+        <p class="text-xs text-gray-600 mb-4">Se descuenta del costo del viaje. Si pones un monto mayor a $0, se genera folio, evidencia y comprobante al guardar el contrato.</p>
+
+        <div class="max-w-xs">
+            <label for="anticipo" class="block text-xs font-medium text-gray-400 mb-1.5">
+                Anticipo <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-sm">$</span>
+                <input type="number" step="0.01" min="0" id="anticipo" name="anticipo" value="{{ old('anticipo', $contrato?->anticipo) }}"
+                       class="w-full pl-7 pr-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('anticipo') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                       placeholder="0.00"/>
+            </div>
+            @error('anticipo')
+                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+            @enderror
+        </div>
+
+        {{-- Detalles del anticipo (se ven cuando hay monto > 0) --}}
+        <div id="anticipo-detalles" class="mt-4 pt-4 border-t border-gray-700/40 {{ (float) old('anticipo', 0) > 0 ? '' : 'hidden' }}">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-semibold text-white flex items-center gap-2">
+                    <span class="w-4 h-4 brand-gradient rounded-md flex items-center justify-center flex-shrink-0">
+                        <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </span>
+                    Detalles del anticipo
+                </h3>
+                <span class="text-xs text-gray-500 italic">Se genera folio, evidencia y PDF al guardar</span>
             </div>
 
-            <div>
-                <label for="anticipo" class="block text-xs font-medium text-gray-400 mb-1.5">
-                    Anticipo <span class="text-red-500">*</span>
-                </label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-sm">$</span>
-                    <input type="number" step="0.01" min="0" id="anticipo" name="anticipo" value="{{ old('anticipo', $contrato?->anticipo) }}"
-                           class="w-full pl-7 pr-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('anticipo') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-                           placeholder="0.00"/>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label for="anticipo_fecha" class="block text-xs font-medium text-gray-400 mb-1.5">
+                        Fecha del anticipo <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" id="anticipo_fecha" name="anticipo_fecha"
+                           value="{{ old('anticipo_fecha', now()->format('Y-m-d')) }}"
+                           class="w-full px-3 py-2.5 bg-gray-900/80 border {{ $errors->has('anticipo_fecha') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"/>
+                    @error('anticipo_fecha')
+                        <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                    @enderror
                 </div>
-                @error('anticipo')
-                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
-                @enderror
+
+                <div>
+                    <label for="anticipo_metodo_pago" class="block text-xs font-medium text-gray-400 mb-1.5">Método de pago</label>
+                    <select id="anticipo_metodo_pago" name="anticipo_metodo_pago"
+                            class="w-full px-3 py-2.5 bg-gray-900/80 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                        <option value="" class="bg-gray-900">— Sin especificar —</option>
+                        @foreach(['Efectivo', 'Transferencia', 'Tarjeta', 'Depósito', 'Cheque'] as $metodo)
+                            <option value="{{ $metodo }}" class="bg-gray-900" {{ old('anticipo_metodo_pago') === $metodo ? 'selected' : '' }}>{{ $metodo }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="anticipo_evidencia" class="block text-xs font-medium text-gray-400 mb-1.5">
+                        Evidencia
+                        <span class="text-xs text-gray-600 font-normal">(jpg, png, pdf · 5MB)</span>
+                    </label>
+                    <input type="file" id="anticipo_evidencia" name="anticipo_evidencia"
+                           accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                           class="w-full text-xs text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 file:text-white file:text-xs file:font-medium hover:file:bg-gray-600"/>
+                    @error('anticipo_evidencia')
+                        <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label for="anticipo_notas" class="block text-xs font-medium text-gray-400 mb-1.5">
+                    Notas
+                    <span class="text-xs text-gray-600 font-normal">(opcional)</span>
+                </label>
+                <input type="text" id="anticipo_notas" name="anticipo_notas"
+                       value="{{ old('anticipo_notas') }}"
+                       class="w-full px-3 py-2.5 bg-gray-900/80 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                       placeholder="Referencia, folio de transferencia, observaciones..."/>
             </div>
         </div>
     </div>
+    @endunless
 
     {{-- Sección: Firma y notas --}}
     <div class="px-6 py-5">
@@ -313,3 +391,25 @@
         </div>
     </div>
 </div>
+
+@once
+@push('scripts')
+<script>
+    (function () {
+        const anticipoInput = document.getElementById('anticipo');
+        const detalles = document.getElementById('anticipo-detalles');
+        if (!anticipoInput || !detalles) return;
+
+        const toggle = () => {
+            const value = parseFloat(anticipoInput.value) || 0;
+            detalles.classList.toggle('hidden', value <= 0);
+        };
+
+        anticipoInput.addEventListener('input', toggle);
+        anticipoInput.addEventListener('change', toggle);
+        // Estado inicial (por si el form viene con old() lleno)
+        toggle();
+    })();
+</script>
+@endpush
+@endonce

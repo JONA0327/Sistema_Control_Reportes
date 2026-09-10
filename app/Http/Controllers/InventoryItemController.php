@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\IngresoEgreso;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
+use App\Models\InventoryPurchase;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -54,38 +55,43 @@ class InventoryItemController extends Controller
         }
         unset($data['foto']);
 
-        if ($data['origen_registro'] === 'existente') {
-            $data['precio'] = null;
-        } elseif ($request->hasFile('comprobante')) {
-            $data['comprobante_path'] = $request->file('comprobante')->store('inventario/comprobantes', 'public');
-        }
-        unset($data['comprobante'], $data['origen_registro']);
+        $esNuevaCompra = $data['origen_registro'] === 'nueva_compra';
+        $stockInicial  = $data['stock_quantity'];
+        $precio        = $data['precio'] ?? null;
+        $comprobante   = $request->file('comprobante');
 
-        $data['created_at'] = now();
+        unset($data['precio'], $data['comprobante'], $data['origen_registro']);
+
+        $data['created_at']    = now();
+        $data['stock_quantity'] = $esNuevaCompra ? 0 : $stockInicial;
 
         $item = InventoryItem::create($data);
 
-        if ($item->precio > 0) {
-            IngresoEgreso::registrarDesdeOrigen($item, [
-                'tipo' => 'egreso',
-                'concepto' => "Compra de refacción: {$item->name} ({$item->code})",
-                'monto' => $item->precio,
-                'fecha' => now(),
-                'categoria' => 'Inventario',
-                'user_id' => $request->user()->id,
+        if ($esNuevaCompra) {
+            InventoryPurchase::create([
+                'item_id'          => $item->id,
+                'quantity'         => $stockInicial,
+                'precio'           => $precio,
+                'comprobante_path' => $comprobante->store('inventario/comprobantes', 'public'),
+                'estado'           => 'pendiente',
+                'solicitado_por'   => $request->user()->id,
             ]);
         }
 
-        return redirect()->route('inventario.index')
-            ->with('success', "Refacción \"{$item->name}\" registrada correctamente.");
+        $mensaje = $esNuevaCompra
+            ? "Refacción \"{$item->name}\" registrada. La compra quedó pendiente de validación por administración."
+            : "Refacción \"{$item->name}\" registrada correctamente.";
+
+        return redirect()->route('inventario.index')->with('success', $mensaje);
     }
 
     public function edit(InventoryItem $item)
     {
         $movements = $item->movements()->with(['user', 'responsable'])->latest('id')->take(15)->get();
+        $purchases = $item->purchases()->with(['solicitadoPor', 'revisadoPor'])->latest('id')->take(15)->get();
         $usuarios = User::where('is_active', true)->orderBy('name')->get();
 
-        return view('inventario.edit', compact('item', 'movements', 'usuarios'));
+        return view('inventario.edit', compact('item', 'movements', 'purchases', 'usuarios'));
     }
 
     public function update(Request $request, InventoryItem $item)
@@ -131,6 +137,11 @@ class InventoryItemController extends Controller
             Storage::disk('public')->delete($item->comprobante_path);
         }
         IngresoEgreso::eliminarDesdeOrigen($item);
+
+        foreach ($item->purchases as $compra) {
+            Storage::disk('public')->delete($compra->comprobante_path);
+            IngresoEgreso::eliminarDesdeOrigen($compra);
+        }
 
         $item->delete();
 

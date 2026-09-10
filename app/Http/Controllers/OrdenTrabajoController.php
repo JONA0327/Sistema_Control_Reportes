@@ -189,7 +189,7 @@ class OrdenTrabajoController extends Controller
         $orden = $report->ordenTrabajo()->firstOrFail();
         $this->autorizarAccesoExterno($request, $orden);
 
-        $report->load(['bus']);
+        $report->load(['bus', 'operador', 'photos', 'videos']);
         $orden->load(['piezas' => fn ($q) => $q->with('user')->latest('id')]);
 
         return view('reports.orden-externo', compact('report', 'orden'));
@@ -233,7 +233,7 @@ class OrdenTrabajoController extends Controller
         $report->loadMissing('operador');
 
         $destinatarios = collect([$report->operador])
-            ->merge(User::role(['administrador', 'administracion'])->where('is_active', true)->get())
+            ->merge(User::role(['superadmin', 'administracion'])->where('is_active', true)->get())
             ->unique('id')
             ->reject(fn($u) => $u->id === $request->user()->id);
 
@@ -262,7 +262,7 @@ class OrdenTrabajoController extends Controller
             'logoBase64'     => $logoBase64,
             'firmanteNombre' => $firmanteNombre,
             'firmanteRol'    => $firmanteRol,
-        ])->setPaper('letter');
+        ])->setPaper([0, 0, 612, 936]); // Oficio (8.5" x 13")
 
         return $pdf->download("orden-trabajo-{$report->folio}.pdf");
     }

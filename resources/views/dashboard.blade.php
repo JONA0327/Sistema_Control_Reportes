@@ -63,11 +63,11 @@
                 @endforelse
             </div>
 
-            @unlessrole('mecanico')
+            @can('viajes.ver')
                 <div class="px-5 py-3 border-t border-gray-700/40">
                     <a href="{{ route('viajes.index') }}" class="text-xs text-red-500 hover:text-red-400 font-medium">Ver todos los viajes</a>
                 </div>
-            @endunlessrole
+            @endcan
         </div>
 
         {{-- ─── Gastos cerrados recientemente ────────────────────── --}}
@@ -110,11 +110,11 @@
                 @endforelse
             </div>
 
-            @hasanyrole('administrador|administracion')
+            @can('gastos.aprobar')
                 <div class="px-5 py-3 border-t border-gray-700/40">
                     <a href="{{ route('viajes.index') }}" class="text-xs text-red-500 hover:text-red-400 font-medium">Ver todos los viajes</a>
                 </div>
-            @endhasanyrole
+            @endcan
         </div>
 
         {{-- ─── Reportes de camiones ──────────────────────────────── --}}

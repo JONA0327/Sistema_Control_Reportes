@@ -53,6 +53,11 @@ class ReportController extends Controller
             'km_actual'     => ['required', 'integer', 'min:0'],
             'categorias'    => ['required', 'array', 'min:1'],
             'categorias.*'  => [Rule::in(array_keys(Report::CATEGORIAS))],
+            'frecuencia'    => ['required', Rule::in(array_keys(Report::FRECUENCIAS))],
+            'condiciones'   => ['required', 'array', 'min:1'],
+            'condiciones.*' => [Rule::in(array_keys(Report::CONDICIONES))],
+            'sintomas'      => ['required', 'array', 'min:1'],
+            'sintomas.*'    => [Rule::in(array_keys(Report::SINTOMAS))],
             'urgencia'      => ['required', Rule::in(array_keys(Report::URGENCIAS))],
             'description'   => ['required', 'string', 'max:1000'],
             'fotos'         => ['nullable', 'array', 'max:10'],
@@ -72,7 +77,7 @@ class ReportController extends Controller
         $this->storeEvidencias($request, $report);
 
         $report->load(['bus', 'operador']);
-        $destinatarios = User::role(['mecanico', 'administrador', 'administracion'])
+        $destinatarios = User::role(['mecanico', 'superadmin', 'administracion'])
             ->where('is_active', true)
             ->where('id', '!=', $request->user()->id)
             ->get();
@@ -92,13 +97,18 @@ class ReportController extends Controller
 
     public function update(Request $request, Report $report)
     {
-        $canEditStatus = $request->user()->hasAnyRole(['administrador', 'administracion']);
+        $canEditStatus = $request->user()->can('reportes.estado');
 
         $rules = [
             'bus_id'        => ['required', 'exists:buses,id'],
             'km_actual'     => ['required', 'integer', 'min:0'],
             'categorias'    => ['required', 'array', 'min:1'],
             'categorias.*'  => [Rule::in(array_keys(Report::CATEGORIAS))],
+            'frecuencia'    => ['nullable', Rule::in(array_keys(Report::FRECUENCIAS))],
+            'condiciones'   => ['nullable', 'array'],
+            'condiciones.*' => [Rule::in(array_keys(Report::CONDICIONES))],
+            'sintomas'      => ['nullable', 'array'],
+            'sintomas.*'    => [Rule::in(array_keys(Report::SINTOMAS))],
             'urgencia'      => ['required', Rule::in(array_keys(Report::URGENCIAS))],
             'description'   => ['required', 'string', 'max:1000'],
             'fotos'         => ['nullable', 'array', 'max:10'],

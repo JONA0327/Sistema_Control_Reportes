@@ -114,6 +114,8 @@ class Liquidacion extends Model
             'sobrante_a_devolver'    => $this->sobranteADevolver(),
             'exceso_gasto'           => $this->excesoGasto(),
             'ganancia_estimada'      => $this->viaje->gananciaEstimada(),
+            'ganancia_porcentaje'    => $this->viaje->porcentajeGananciaPorOperador(),
+            'doble_operador'         => $this->viaje->doble_operador,
         ];
     }
 }

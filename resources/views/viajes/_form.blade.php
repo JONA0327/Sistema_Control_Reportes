@@ -43,7 +43,7 @@
                             class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('bus_id') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
                         <option value="" class="bg-gray-900">— Seleccionar unidad —</option>
                         @foreach($buses as $bus)
-                            <option value="{{ $bus->id }}" data-operador="{{ $bus->operator_id }}" class="bg-gray-900"
+                            <option value="{{ $bus->id }}" data-operador="{{ $bus->operator_id }}" data-copiloto="{{ $bus->copiloto_id }}" class="bg-gray-900"
                                     {{ old('bus_id', $viaje->bus_id ?? '') == $bus->id ? 'selected' : '' }}>
                                 Bus #{{ $bus->num_bus }} — {{ $bus->placa }}
                             </option>
@@ -81,6 +81,37 @@
                     <p class="mt-1.5 text-xs text-gray-600">Se autocompleta con el operador asignado a la unidad. Cámbialo si un operador suplente cubre este viaje.</p>
                 @endif
                 @error('operador_id')
+                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- Doble operador --}}
+            <div class="sm:col-span-2" x-data="{ doble: {{ old('segundo_operador_id', $viaje->segundo_operador_id ?? '') ? 'true' : 'false' }} }">
+                <label class="flex items-center gap-2 cursor-pointer select-none mb-1.5">
+                    <input type="checkbox" id="doble_operador_toggle" x-model="doble" @change="if (!doble) document.getElementById('segundo_operador_id').value = ''"
+                           class="w-4 h-4 rounded border-gray-600 bg-gray-900 text-red-600 focus:ring-red-500 focus:ring-offset-gray-800"/>
+                    <span class="text-xs font-medium text-gray-400">¿Va con doble operador?</span>
+                </label>
+                <p class="text-xs text-gray-600 mb-2">Los gastos y la liquidación los sigue gestionando el operador titular. El segundo operador solo puede consultarlos. Con doble operador, cada uno gana 10% del costo del viaje (en vez del 15% de un solo operador).</p>
+
+                <div x-show="doble" x-cloak>
+                    @if($operadores->isEmpty())
+                        <p class="text-xs text-amber-300">No hay operadores activos disponibles.</p>
+                    @else
+                        <select id="segundo_operador_id" name="segundo_operador_id"
+                                class="w-full sm:w-96 px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('segundo_operador_id') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                            <option value="" class="bg-gray-900">— Seleccionar segundo operador —</option>
+                            @foreach($operadores as $op)
+                                <option value="{{ $op->id }}" class="bg-gray-900"
+                                        {{ old('segundo_operador_id', $viaje->segundo_operador_id ?? '') == $op->id ? 'selected' : '' }}>
+                                    {{ $op->name }} {{ $op->last_name }} ({{ $op->carnet }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1.5 text-xs text-gray-600">Se sugiere el copiloto asignado a la unidad, pero puedes elegir a cualquier otro operador para este viaje.</p>
+                    @endif
+                </div>
+                @error('segundo_operador_id')
                     <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                 @enderror
             </div>
@@ -206,6 +237,35 @@
                     <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                 @enderror
             </div>
+
+            {{-- Litros diésel inicio --}}
+            <div>
+                <label for="litros_diesel_inicio" class="block text-xs font-medium text-gray-400 mb-1.5">
+                    Litros de salida <span class="text-gray-600 font-normal">(opcional)</span>
+                </label>
+                <input type="number" step="0.01" min="0" id="litros_diesel_inicio" name="litros_diesel_inicio"
+                       value="{{ old('litros_diesel_inicio', $viaje->litros_diesel_inicio ?? '') }}"
+                       class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('litros_diesel_inicio') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                       placeholder="0.00"/>
+                @error('litros_diesel_inicio')
+                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- Costo por litro diésel inicio --}}
+            <div>
+                <label for="costo_litro_diesel_inicio" class="block text-xs font-medium text-gray-400 mb-1.5">
+                    Costo por litro de salida <span class="text-gray-600 font-normal">(opcional)</span>
+                </label>
+                <input type="number" step="0.01" min="0" id="costo_litro_diesel_inicio" name="costo_litro_diesel_inicio"
+                       value="{{ old('costo_litro_diesel_inicio', $viaje->costo_litro_diesel_inicio ?? '') }}"
+                       class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('costo_litro_diesel_inicio') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                       placeholder="0.00"/>
+                <p class="mt-1 text-xs text-gray-600">El diésel extra que registre el operador durante el viaje se suma como el diésel de regreso.</p>
+                @error('costo_litro_diesel_inicio')
+                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
         </div>
     </div>
 
@@ -227,9 +287,22 @@
         const opt = busSelect.options[busSelect.selectedIndex];
         const operadorId = opt ? opt.dataset.operador : '';
         const operadorSelect = document.getElementById('operador_id');
-        if (!operadorSelect || !operadorId) return;
-        if (operadorSelect.querySelector(`option[value="${operadorId}"]`)) {
+        if (operadorSelect && operadorId && operadorSelect.querySelector(`option[value="${operadorId}"]`)) {
             operadorSelect.value = operadorId;
+        }
+
+        // Sugiere el copiloto de la unidad como segundo operador, sin forzar
+        // la casilla si el usuario ya la había desmarcado a propósito.
+        const copilotoId = opt ? opt.dataset.copiloto : '';
+        const segundoSelect = document.getElementById('segundo_operador_id');
+        const toggle = document.getElementById('doble_operador_toggle');
+        if (!toggle || !copilotoId) return;
+        if (segundoSelect && segundoSelect.querySelector(`option[value="${copilotoId}"]`)) {
+            if (!toggle.checked) {
+                toggle.checked = true;
+                toggle.dispatchEvent(new Event('change'));
+            }
+            segundoSelect.value = copilotoId;
         }
     }
 </script>

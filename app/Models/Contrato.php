@@ -58,12 +58,12 @@ class Contrato extends Model
 
     public function getRestoAttribute(): float
     {
-        return (float) $this->costo_viaje - (float) $this->anticipo;
+        return (float) $this->costo_viaje - $this->anticipo_efectivo;
     }
 
     public function getTotalPagadoAttribute(): float
     {
-        return (float) $this->anticipo + (float) $this->pagos->sum('monto');
+        return $this->anticipo_efectivo + (float) $this->pagos->sum('monto');
     }
 
     public function getSaldoPendienteAttribute(): float
@@ -89,5 +89,36 @@ class Contrato extends Model
     public function pagos(): HasMany
     {
         return $this->hasMany(ContratoPago::class);
+    }
+
+    /**
+     * Anticipos formalizados del contrato (cada uno con su folio,
+     * evidencia y comprobante PDF). La columna `anticipo` del contrato
+     * sigue existiendo por compatibilidad con los contratos generados
+     * antes de esta tabla; el accessor `anticipo_total` es la suma
+     * de los anticipos formalizados.
+     */
+    public function anticipos(): HasMany
+    {
+        return $this->hasMany(ContratoAnticipo::class)->latest('fecha_anticipo')->latest('id');
+    }
+
+    public function getAnticipoTotalAttribute(): float
+    {
+        return (float) $this->anticipos->whereNull('cancelado_at')->sum('monto');
+    }
+
+    /**
+     * Anticipo efectivo que se usa en cálculos y en la UI. Si ya hay
+     * anticipos formalizados (no cancelados), su suma es la fuente de
+     * verdad. Si no hay formales (contratos legacy), se usa la columna
+     * `anticipo` del contrato. Esto evita doble conteo en contratos
+     * nuevos (que se crean con anticipo + formal al mismo tiempo).
+     */
+    public function getAnticipoEfectivoAttribute(): float
+    {
+        $formalizados = (float) $this->anticipos->whereNull('cancelado_at')->sum('monto');
+
+        return $formalizados > 0 ? $formalizados : (float) $this->anticipo;
     }
 }

@@ -13,12 +13,14 @@ class DieselCargaController extends Controller
 
     public function index(Request $request)
     {
-        $viajes = Viaje::with(['bus', 'dieselCargas' => fn($q) => $q->orderByDesc('created_at'), 'liquidacion.gastos'])
-            ->where('operador_id', $request->user()->id)
+        $userId = $request->user()->id;
+
+        $viajes = Viaje::with(['bus', 'operador', 'segundoOperador', 'dieselCargas' => fn($q) => $q->orderByDesc('created_at'), 'liquidacion.gastos'])
+            ->where(fn($q) => $q->where('operador_id', $userId)->orWhere('segundo_operador_id', $userId))
             ->orderByDesc('fecha_salida')
             ->get();
 
-        return view('gastos.index', compact('viajes'));
+        return view('gastos.index', compact('viajes', 'userId'));
     }
 
     public function storeExtraByOperador(Request $request, Viaje $viaje)

@@ -170,6 +170,31 @@
         </tr>
     </table>
 
+    @if($report->frecuencia || !empty($report->condiciones) || !empty($report->sintomas))
+        <table class="data-grid">
+            <tr>
+                @if($report->frecuencia)
+                    <td>
+                        <span class="label">Frecuencia</span>
+                        <span>{{ \App\Models\Report::FRECUENCIAS[$report->frecuencia] ?? '—' }}</span>
+                    </td>
+                @endif
+                @if(!empty($report->condiciones))
+                    <td>
+                        <span class="label">Cuándo ocurre</span>
+                        <span>{{ collect($report->condiciones)->map(fn($c) => \App\Models\Report::CONDICIONES[$c] ?? $c)->implode(', ') }}</span>
+                    </td>
+                @endif
+                @if(!empty($report->sintomas))
+                    <td>
+                        <span class="label">Se percibe</span>
+                        <span>{{ collect($report->sintomas)->map(fn($s) => \App\Models\Report::SINTOMAS[$s] ?? $s)->implode(', ') }}</span>
+                    </td>
+                @endif
+            </tr>
+        </table>
+    @endif
+
     <div class="box">
         @if($report->description_resumen)
             <span class="label" style="display:block; margin-bottom: 3px;">Puntos clave de la falla</span>

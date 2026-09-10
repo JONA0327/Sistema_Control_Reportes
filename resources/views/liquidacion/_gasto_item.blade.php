@@ -34,7 +34,7 @@
         <p class="text-xs text-red-400 mt-2">Motivo: {{ $gasto->motivo_rechazo }}</p>
     @endif
 
-    @if(($context ?? 'operador') === 'operador' && $gasto->liquidacion->estado === 'abierta')
+    @if(($context ?? 'operador') === 'operador' && $gasto->liquidacion->estado === 'abierta' && ! ($soloLectura ?? false))
         <form method="POST" action="{{ route('liquidacion.gastos.destroy', $gasto) }}"
               onsubmit="return confirm('¿Eliminar este gasto?')" class="mt-3">
             @csrf

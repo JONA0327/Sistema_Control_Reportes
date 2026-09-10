@@ -5,7 +5,7 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
-            <a href="{{ route('ingresos-egresos.index') }}" class="hover:text-gray-300 transition-colors">Egresos y Ingresos</a>
+            <a href="{{ route('ingresos-egresos.index', ['pais' => $pais]) }}" class="hover:text-gray-300 transition-colors">Egresos y Ingresos</a>
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
@@ -14,7 +14,7 @@
     </x-slot>
 
     <div class="mb-6 flex items-center gap-4">
-        <a href="{{ route('ingresos-egresos.index') }}"
+        <a href="{{ route('ingresos-egresos.index', ['pais' => $pais]) }}"
            class="flex items-center justify-center w-9 h-9 rounded-xl bg-gray-800/60 border border-gray-700/50 text-gray-400 hover:text-white hover:border-gray-600 transition-all">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -32,7 +32,7 @@
             @include('ingresos-egresos._form')
 
             <div class="bg-gray-800/40 border border-gray-700/40 border-t-0 rounded-b-2xl px-6 py-4 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3">
-                <a href="{{ route('ingresos-egresos.index') }}"
+                <a href="{{ route('ingresos-egresos.index', ['pais' => $pais]) }}"
                    class="w-full sm:w-auto text-center px-5 py-2.5 bg-gray-700/50 border border-gray-600/40 text-gray-300 text-sm font-medium rounded-xl hover:bg-gray-700 transition-colors">
                     Cancelar
                 </a>

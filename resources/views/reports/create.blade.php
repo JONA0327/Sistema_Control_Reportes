@@ -22,55 +22,77 @@
         </a>
         <div>
             <h1 class="text-2xl font-bold text-white">Reporte de falla</h1>
-            <p class="text-sm text-gray-500 mt-0.5">Levantamiento de reporte — Operador</p>
+            <p class="text-sm text-gray-500 mt-0.5">{{ auth()->user()->name }} {{ auth()->user()->last_name }} · {{ now()->format('d/m/Y H:i') }}</p>
         </div>
     </div>
 
-    <div class="max-w-2xl">
+    @php
+        $stepHasError = [
+            1 => $errors->hasAny(['bus_id', 'km_actual']),
+            2 => $errors->hasAny(['categorias']),
+            3 => $errors->hasAny(['frecuencia', 'condiciones', 'sintomas']),
+            4 => $errors->hasAny(['description', 'fotos', 'videos']),
+            5 => $errors->hasAny(['urgencia']),
+        ];
+        $initialStep = collect($stepHasError)->filter()->keys()->first() ?? 1;
+    @endphp
+
+    <div class="max-w-2xl" x-data="reportWizard({{ $initialStep }})">
+
         @if ($errors->any())
             <div class="mb-4 flex items-start gap-3 px-4 py-3 bg-red-900/30 border border-red-700/50 rounded-xl text-red-300 text-sm">
                 <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                 </svg>
-                <span>Hay {{ $errors->count() }} {{ $errors->count() === 1 ? 'error' : 'errores' }} en el formulario. Revisa los campos marcados en rojo antes de enviar.</span>
+                <span>Hay {{ $errors->count() }} {{ $errors->count() === 1 ? 'error' : 'errores' }} en el formulario. Revisa los campos marcados en rojo.</span>
             </div>
         @endif
 
-        <form method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data">
+        {{-- Barra de progreso --}}
+        <div class="mb-5">
+            <div class="flex items-center">
+                @foreach(['Unidad', 'Ubicación', 'Detalles', 'Descripción', 'Gravedad', 'Revisar'] as $i => $label)
+                    @php $n = $i + 1; @endphp
+                    <div class="flex items-center" :class="{ 'flex-1': {{ $n }} < 6 }">
+                        <button type="button" @click="goTo({{ $n }})"
+                                class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all flex-shrink-0"
+                                :class="step === {{ $n }} ? 'brand-gradient border-transparent text-white shadow-lg shadow-red-950/40' : (step > {{ $n }} ? 'bg-red-500/20 border-red-500/40 text-red-400' : 'bg-gray-800 border-gray-700 text-gray-500')">
+                            <template x-if="step > {{ $n }}">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </template>
+                            <template x-if="step <= {{ $n }}">
+                                <span>{{ $n }}</span>
+                            </template>
+                        </button>
+                        @if($n < 6)
+                            <div class="flex-1 h-0.5 mx-1" :class="step > {{ $n }} ? 'bg-red-500/40' : 'bg-gray-800'"></div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+            <p class="mt-2 text-xs font-medium text-gray-400 text-center" x-text="stepLabels[step - 1] + ' · Paso ' + step + ' de 6'"></p>
+        </div>
+
+        <form method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data" @submit="onSubmit">
             @csrf
 
-            <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl divide-y divide-gray-700/40">
+            <div id="wizard-card" class="bg-gray-800/40 border border-gray-700/40 rounded-2xl overflow-hidden">
 
-                {{-- 1. Datos de identificación --}}
-                <div class="px-6 py-5">
-                    <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                        <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center flex-shrink-0">
-                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                {{-- Paso 1: Unidad --}}
+                <div x-show="step === 1" x-cloak class="px-6 py-6">
+                    <h2 class="text-base font-semibold text-white mb-1 flex items-center gap-2">
+                        <span class="w-6 h-6 brand-gradient rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                             </svg>
                         </span>
-                        Datos de identificación
+                        ¿Qué unidad estás reportando?
                     </h2>
+                    <p class="text-xs text-gray-600 mb-5">Confirma la unidad y el kilometraje actual.</p>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                        {{-- Reportado por --}}
-                        <div>
-                            <label class="block text-xs font-medium text-gray-400 mb-1.5">Reportado por</label>
-                            <div class="px-3.5 py-2.5 bg-gray-900/40 border border-gray-800 rounded-xl text-gray-300 text-sm">
-                                {{ auth()->user()->name }} {{ auth()->user()->last_name }}
-                            </div>
-                        </div>
-
-                        {{-- Fecha y hora --}}
-                        <div>
-                            <label class="block text-xs font-medium text-gray-400 mb-1.5">Fecha y hora</label>
-                            <div class="px-3.5 py-2.5 bg-gray-900/40 border border-gray-800 rounded-xl text-gray-300 text-sm">
-                                {{ now()->format('d/m/Y H:i') }}
-                            </div>
-                        </div>
-
-                        {{-- Unidad --}}
+                    <div class="space-y-4">
                         <div>
                             <label for="bus_id" class="block text-xs font-medium text-gray-400 mb-1.5">
                                 Número económico / Unidad <span class="text-red-500">*</span>
@@ -83,8 +105,8 @@
                                     <p class="text-xs text-amber-300">No hay unidades activas disponibles.</p>
                                 </div>
                             @else
-                                <select id="bus_id" name="bus_id"
-                                        class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('bus_id') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                                <select id="bus_id" name="bus_id" x-model="busId"
+                                        class="w-full px-3.5 py-3 bg-gray-900/80 border {{ $errors->has('bus_id') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
                                     <option value="" class="bg-gray-900">— Seleccionar unidad —</option>
                                     @foreach($buses as $bus)
                                         <option value="{{ $bus->id }}" class="bg-gray-900"
@@ -99,13 +121,12 @@
                             @enderror
                         </div>
 
-                        {{-- Kilometraje actual --}}
                         <div>
                             <label for="km_actual" class="block text-xs font-medium text-gray-400 mb-1.5">
                                 Kilometraje actual <span class="text-red-500">*</span>
                             </label>
-                            <input type="number" id="km_actual" name="km_actual" min="0" value="{{ old('km_actual') }}"
-                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('km_actual') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                            <input type="number" id="km_actual" name="km_actual" min="0" value="{{ old('km_actual') }}" x-model="kmActual"
+                                   class="w-full px-3.5 py-3 bg-gray-900/80 border {{ $errors->has('km_actual') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                                    placeholder="Ej: 152340"/>
                             @error('km_actual')
                                 <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
@@ -114,24 +135,25 @@
                     </div>
                 </div>
 
-                {{-- 2. ¿Dónde está la falla? --}}
-                <div class="px-6 py-5">
-                    <h2 class="text-sm font-semibold text-white mb-1 flex items-center gap-2">
-                        <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center flex-shrink-0">
-                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                {{-- Paso 2: ¿Dónde está la falla? --}}
+                <div x-show="step === 2" x-cloak class="px-6 py-6">
+                    <h2 class="text-base font-semibold text-white mb-1 flex items-center gap-2">
+                        <span class="w-6 h-6 brand-gradient rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
                         </span>
-                        ¿Dónde está la falla? <span class="text-red-500">*</span>
+                        ¿Dónde está la falla?
                     </h2>
-                    <p class="text-xs text-gray-600 mb-4">Selecciona una o varias opciones</p>
+                    <p class="text-xs text-gray-600 mb-4">Toca una o varias zonas de la unidad.</p>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         @foreach(\App\Models\Report::CATEGORIAS as $key => $label)
                         <label class="relative cursor-pointer">
-                            <input type="checkbox" name="categorias[]" value="{{ $key }}" class="sr-only peer"
+                            <input type="checkbox" name="categorias[]" value="{{ $key }}" class="sr-only peer" x-model="categorias"
                                    {{ in_array($key, old('categorias', [])) ? 'checked' : '' }}>
-                            <div class="px-3.5 py-2.5 rounded-xl border border-gray-700 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-600/10 transition-all">
+                            <div class="px-3.5 py-3 rounded-xl border border-gray-700 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-600/10 transition-all">
                                 <span class="text-sm text-gray-300">{{ $label }}</span>
                             </div>
                         </label>
@@ -142,17 +164,90 @@
                     @enderror
                 </div>
 
-                {{-- 3. Descripción de la falla --}}
-                <div class="px-6 py-5" x-data="audioReport"
-                     x-effect="transcription && document.getElementById('description') && (document.getElementById('description').value = transcription)">
+                {{-- Paso 3: Cuándo ocurre y qué se percibe (checklist guiado) --}}
+                <div x-show="step === 3" x-cloak class="px-6 py-6">
+                    <h2 class="text-base font-semibold text-white mb-1 flex items-center gap-2">
+                        <span class="w-6 h-6 brand-gradient rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </span>
+                        Un par de preguntas rápidas
+                    </h2>
+                    <p class="text-xs text-gray-600 mb-5">Esto ayuda al mecánico a diagnosticar más rápido.</p>
+
+                    <div class="space-y-6">
+                        {{-- Frecuencia --}}
+                        <div>
+                            <p class="text-xs font-medium text-gray-400 mb-2">¿Con qué frecuencia pasa? <span class="text-red-500">*</span></p>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                @foreach(\App\Models\Report::FRECUENCIAS as $key => $label)
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="frecuencia" value="{{ $key }}" class="sr-only peer" x-model="frecuencia"
+                                           {{ old('frecuencia') === $key ? 'checked' : '' }}>
+                                    <div class="flex items-center justify-center text-center px-3 py-3 rounded-xl border border-gray-700 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-600/10 transition-all h-full">
+                                        <span class="text-xs font-medium text-gray-300 peer-checked:text-white">{{ $label }}</span>
+                                    </div>
+                                </label>
+                                @endforeach
+                            </div>
+                            @error('frecuencia')
+                                <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Condiciones --}}
+                        <div>
+                            <p class="text-xs font-medium text-gray-400 mb-2">¿Cuándo ocurre? <span class="text-red-500">*</span> <span class="text-gray-600 font-normal">(una o varias)</span></p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                @foreach(\App\Models\Report::CONDICIONES as $key => $label)
+                                <label class="relative cursor-pointer">
+                                    <input type="checkbox" name="condiciones[]" value="{{ $key }}" class="sr-only peer" x-model="condiciones"
+                                           {{ in_array($key, old('condiciones', [])) ? 'checked' : '' }}>
+                                    <div class="px-3.5 py-2.5 rounded-xl border border-gray-700 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-600/10 transition-all">
+                                        <span class="text-sm text-gray-300">{{ $label }}</span>
+                                    </div>
+                                </label>
+                                @endforeach
+                            </div>
+                            @error('condiciones')
+                                <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Síntomas --}}
+                        <div>
+                            <p class="text-xs font-medium text-gray-400 mb-2">¿Qué percibes? <span class="text-red-500">*</span> <span class="text-gray-600 font-normal">(una o varias)</span></p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                @foreach(\App\Models\Report::SINTOMAS as $key => $label)
+                                <label class="relative cursor-pointer">
+                                    <input type="checkbox" name="sintomas[]" value="{{ $key }}" class="sr-only peer"
+                                           x-model="sintomas" @change="onSintomaChange('{{ $key }}')"
+                                           {{ in_array($key, old('sintomas', [])) ? 'checked' : '' }}>
+                                    <div class="px-3.5 py-2.5 rounded-xl border border-gray-700 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-600/10 transition-all">
+                                        <span class="text-sm text-gray-300">{{ $label }}</span>
+                                    </div>
+                                </label>
+                                @endforeach
+                            </div>
+                            @error('sintomas')
+                                <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Paso 4: Descripción + audio + evidencia --}}
+                <div x-show="step === 4" x-cloak class="px-6 py-6" x-data="audioReport"
+                     x-effect="transcription && document.getElementById('description') && (document.getElementById('description').value = transcription, description = transcription)">
                     <div class="flex items-center justify-between gap-3 mb-1">
-                        <h2 class="text-sm font-semibold text-white flex items-center gap-2">
-                            <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center flex-shrink-0">
-                                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                            <span class="w-6 h-6 brand-gradient rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                             </span>
-                            Descripción de la falla
+                            Cuéntanos qué pasa
                         </h2>
                         <button type="button" x-show="mode === 'idle'" x-cloak @click="startRecording()"
                                 class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/60 hover:bg-gray-700 border border-gray-600/40 rounded-lg text-xs font-medium text-gray-300 transition-colors flex-shrink-0">
@@ -239,7 +334,7 @@
                         <label for="description" class="block text-xs font-medium text-gray-400 mb-1.5">
                             ¿Qué hace la unidad o cuándo ocurre? <span class="text-red-500">*</span>
                         </label>
-                        <textarea id="description" name="description" rows="4"
+                        <textarea id="description" name="description" rows="4" x-model="description"
                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('description') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors resize-none"
                                   placeholder='Ej: &quot;Al pasar los 60 km/h empieza a vibrar la dirección y chilla al frenar.&quot;'>{{ old('description') }}</textarea>
                         @error('description')
@@ -325,31 +420,32 @@
                     </div>
                 </div>
 
-                {{-- 4. Estado de la unidad --}}
-                <div class="px-6 py-5">
-                    <h2 class="text-sm font-semibold text-white mb-1 flex items-center gap-2">
-                        <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center flex-shrink-0">
-                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {{-- Paso 5: Gravedad --}}
+                <div x-show="step === 5" x-cloak class="px-6 py-6">
+                    <h2 class="text-base font-semibold text-white mb-1 flex items-center gap-2">
+                        <span class="w-6 h-6 brand-gradient rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                             </svg>
                         </span>
-                        Estado de la unidad <span class="text-red-500">*</span>
+                        ¿Qué tan grave está la falla?
                     </h2>
-                    <p class="text-xs text-gray-600 mb-4">¿Qué tan urgente es la falla?</p>
+                    <p class="text-xs text-gray-600 mb-4">Elige la opción que mejor describa el riesgo actual.</p>
 
-                    <div class="grid grid-cols-1 gap-2">
+                    <div class="grid grid-cols-1 gap-2.5">
                         @foreach([
-                            'verde'    => ['🟢 Ruta normal',          'La unidad puede terminar el turno y entrar a revisión al final del día.',   'text-green-400', 'border-green-500/30 bg-green-500/5', 'border-green-500 bg-green-500/10'],
-                            'amarillo' => ['🟡 Revisión prioritaria', 'La unidad camina pero requiere atención antes de volver a salir.',           'text-amber-400', 'border-amber-500/30 bg-amber-500/5', 'border-amber-500 bg-amber-500/10'],
-                            'rojo'     => ['🔴 Unidad detenida',      'Peligro de seguridad o falla grave. No puede circular.',                     'text-red-400',   'border-red-500/30 bg-red-500/5',     'border-red-500 bg-red-500/10'],
-                        ] as $val => [$label, $desc, $tc, $idle, $active])
+                            'verde'    => ['🟢', 'Puede seguir en ruta',   'La unidad puede terminar el turno y entrar a revisión al final del día.',   'text-green-400', 'border-green-500/30 bg-green-500/5', 'border-green-500 bg-green-500/10'],
+                            'amarillo' => ['🟡', 'Necesita revisión pronto', 'La unidad camina pero requiere atención antes de volver a salir.',           'text-amber-400', 'border-amber-500/30 bg-amber-500/5', 'border-amber-500 bg-amber-500/10'],
+                            'rojo'     => ['🔴', 'No puede circular',      'Peligro de seguridad o falla grave. Detener la unidad de inmediato.',        'text-red-400',   'border-red-500/30 bg-red-500/5',     'border-red-500 bg-red-500/10'],
+                        ] as $val => [$emoji, $label, $desc, $tc, $idle, $active])
                         <label class="relative cursor-pointer">
-                            <input type="radio" name="urgencia" value="{{ $val }}" class="sr-only peer"
+                            <input type="radio" name="urgencia" value="{{ $val }}" class="sr-only peer" x-model="urgencia"
                                    {{ old('urgencia') === $val ? 'checked' : '' }}>
-                            <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border {{ $idle }}
+                            <div class="flex items-center gap-3.5 px-4 py-3.5 rounded-xl border {{ $idle }}
                                         peer-checked:{{ $active }} peer-checked:border-2 transition-all">
+                                <span class="text-2xl flex-shrink-0">{{ $emoji }}</span>
                                 <div>
-                                    <span class="text-sm font-medium {{ $tc }}">{{ $label }}</span>
+                                    <span class="text-sm font-semibold {{ $tc }}">{{ $label }}</span>
                                     <p class="text-xs text-gray-500 mt-0.5">{{ $desc }}</p>
                                 </div>
                             </div>
@@ -361,14 +457,85 @@
                     @enderror
                 </div>
 
-                {{-- Acciones --}}
-                <div class="px-6 py-4 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3">
-                    <a href="{{ route('reports.index') }}"
-                       class="w-full sm:w-auto text-center px-5 py-2.5 bg-gray-700/50 border border-gray-600/40 text-gray-300 text-sm font-medium rounded-xl hover:bg-gray-700 transition-colors">
+                {{-- Paso 6: Revisar y enviar --}}
+                <div x-show="step === 6" x-cloak class="px-6 py-6">
+                    <h2 class="text-base font-semibold text-white mb-1 flex items-center gap-2">
+                        <span class="w-6 h-6 brand-gradient rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </span>
+                        Revisa antes de enviar
+                    </h2>
+                    <p class="text-xs text-gray-600 mb-4">Verifica que todo esté correcto. Puedes volver a cualquier paso para corregir.</p>
+
+                    <div class="space-y-2.5 text-sm">
+                        <div class="flex items-start justify-between gap-3 px-4 py-3 bg-gray-900/40 border border-gray-800 rounded-xl">
+                            <div>
+                                <p class="text-xs text-gray-500">Unidad</p>
+                                <p class="text-white font-medium" x-text="busLabel() || '— Sin seleccionar —'"></p>
+                                <p class="text-xs text-gray-500 mt-0.5" x-text="kmActual ? kmActual + ' km' : ''"></p>
+                            </div>
+                            <button type="button" @click="goTo(1)" class="text-xs text-red-400 hover:text-red-300 flex-shrink-0">Editar</button>
+                        </div>
+
+                        <div class="flex items-start justify-between gap-3 px-4 py-3 bg-gray-900/40 border border-gray-800 rounded-xl">
+                            <div>
+                                <p class="text-xs text-gray-500">Ubicación de la falla</p>
+                                <p class="text-white" x-text="categoriaLabels() || '— Sin seleccionar —'"></p>
+                            </div>
+                            <button type="button" @click="goTo(2)" class="text-xs text-red-400 hover:text-red-300 flex-shrink-0">Editar</button>
+                        </div>
+
+                        <div class="flex items-start justify-between gap-3 px-4 py-3 bg-gray-900/40 border border-gray-800 rounded-xl">
+                            <div>
+                                <p class="text-xs text-gray-500">Detalles</p>
+                                <p class="text-white" x-text="frecuenciaLabel() || '— Sin seleccionar —'"></p>
+                                <p class="text-xs text-gray-400 mt-0.5" x-text="condicionLabels()"></p>
+                                <p class="text-xs text-gray-400" x-text="sintomaLabels()"></p>
+                            </div>
+                            <button type="button" @click="goTo(3)" class="text-xs text-red-400 hover:text-red-300 flex-shrink-0">Editar</button>
+                        </div>
+
+                        <div class="flex items-start justify-between gap-3 px-4 py-3 bg-gray-900/40 border border-gray-800 rounded-xl">
+                            <div class="min-w-0">
+                                <p class="text-xs text-gray-500">Descripción</p>
+                                <p class="text-white truncate" x-text="description || '— Sin descripción —'"></p>
+                            </div>
+                            <button type="button" @click="goTo(4)" class="text-xs text-red-400 hover:text-red-300 flex-shrink-0">Editar</button>
+                        </div>
+
+                        <div class="flex items-start justify-between gap-3 px-4 py-3 bg-gray-900/40 border border-gray-800 rounded-xl">
+                            <div>
+                                <p class="text-xs text-gray-500">Gravedad</p>
+                                <p class="font-medium" :class="urgenciaColor()" x-text="urgenciaLabel() || '— Sin seleccionar —'"></p>
+                            </div>
+                            <button type="button" @click="goTo(5)" class="text-xs text-red-400 hover:text-red-300 flex-shrink-0">Editar</button>
+                        </div>
+                    </div>
+
+                    <div x-show="submitError" x-cloak class="mt-4 flex items-start gap-2 px-3.5 py-2.5 bg-red-900/30 border border-red-700/50 rounded-xl text-red-300 text-xs">
+                        <span x-text="submitError"></span>
+                    </div>
+                </div>
+
+                {{-- Navegación --}}
+                <div class="px-6 py-4 border-t border-gray-700/40 flex items-center justify-between gap-3">
+                    <button type="button" @click="prev()" x-show="step > 1"
+                            class="px-5 py-2.5 bg-gray-700/50 border border-gray-600/40 text-gray-300 text-sm font-medium rounded-xl hover:bg-gray-700 transition-colors">
+                        Atrás
+                    </button>
+                    <a href="{{ route('reports.index') }}" x-show="step === 1"
+                       class="px-5 py-2.5 bg-gray-700/50 border border-gray-600/40 text-gray-300 text-sm font-medium rounded-xl hover:bg-gray-700 transition-colors">
                         Cancelar
                     </a>
-                    <button type="submit"
-                            class="w-full sm:w-auto btn-login-gradient px-5 py-2.5 text-white text-sm font-semibold rounded-xl shadow-lg shadow-red-950/40">
+
+                    <button type="button" @click="next()" x-show="step < 6"
+                            class="ml-auto btn-login-gradient px-6 py-2.5 text-white text-sm font-semibold rounded-xl shadow-lg shadow-red-950/40">
+                        Siguiente
+                    </button>
+                    <button type="submit" x-show="step === 6"
+                            class="ml-auto btn-login-gradient px-6 py-2.5 text-white text-sm font-semibold rounded-xl shadow-lg shadow-red-950/40">
                         Crear reporte
                     </button>
                 </div>
@@ -378,6 +545,100 @@
 
 @push('scripts')
 <script>
+function reportWizard(initialStep) {
+    return {
+        step: initialStep,
+        stepLabels: [
+            'Unidad',
+            '¿Dónde está la falla?',
+            'Un par de preguntas',
+            'Cuéntanos qué pasa',
+            '¿Qué tan grave está?',
+            'Revisar y enviar',
+        ],
+        busId: @json(old('bus_id', $assignedBusId ?? '')),
+        kmActual: @json(old('km_actual', '')),
+        categorias: @json(old('categorias', [])),
+        frecuencia: @json(old('frecuencia', '')),
+        condiciones: @json(old('condiciones', [])),
+        sintomas: @json(old('sintomas', [])),
+        description: @json(old('description', '')),
+        urgencia: @json(old('urgencia', '')),
+        submitError: '',
+        busOptions: @json($buses->mapWithKeys(fn($b) => [(string) $b->id => "Bus #{$b->num_bus} — {$b->placa}"])),
+        categoriaOptions: @json(\App\Models\Report::CATEGORIAS),
+        frecuenciaOptions: @json(\App\Models\Report::FRECUENCIAS),
+        condicionOptions: @json(\App\Models\Report::CONDICIONES),
+        sintomaOptions: @json(\App\Models\Report::SINTOMAS),
+        urgenciaOptions: @json(\App\Models\Report::URGENCIAS),
+
+        onSintomaChange(key) {
+            if (key === 'ninguno' && this.sintomas.includes('ninguno')) {
+                this.sintomas = ['ninguno'];
+            } else if (key !== 'ninguno') {
+                this.sintomas = this.sintomas.filter(s => s !== 'ninguno');
+            }
+        },
+
+        valid(n) {
+            switch (n) {
+                case 1: return !!this.busId && this.kmActual !== '' && this.kmActual !== null;
+                case 2: return this.categorias.length > 0;
+                case 3: return !!this.frecuencia && this.condiciones.length > 0 && this.sintomas.length > 0;
+                case 4: return this.description.trim().length > 0;
+                case 5: return !!this.urgencia;
+                default: return true;
+            }
+        },
+
+        next() {
+            if (!this.valid(this.step)) {
+                document.getElementById('wizard-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            if (this.step < 6) this.step++;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        prev() {
+            if (this.step > 1) this.step--;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        goTo(n) {
+            if (n < this.step || this.valid(this.step)) {
+                this.step = n;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        },
+        onSubmit(e) {
+            for (let n = 1; n <= 5; n++) {
+                if (!this.valid(n)) {
+                    e.preventDefault();
+                    this.submitError = 'Falta completar información. Revisa los pasos anteriores.';
+                    this.step = n;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+            }
+        },
+
+        busLabel() { return this.busOptions[this.busId] || ''; },
+        categoriaLabels() { return this.categorias.map(k => this.categoriaOptions[k]).join(', '); },
+        frecuenciaLabel() { return this.frecuenciaOptions[this.frecuencia] || ''; },
+        condicionLabels() {
+            const l = this.condiciones.map(k => this.condicionOptions[k]);
+            return l.length ? 'Cuándo: ' + l.join(', ') : '';
+        },
+        sintomaLabels() {
+            const l = this.sintomas.map(k => this.sintomaOptions[k]);
+            return l.length ? 'Percibido: ' + l.join(', ') : '';
+        },
+        urgenciaLabel() { return this.urgenciaOptions[this.urgencia] || ''; },
+        urgenciaColor() {
+            return { 'text-green-400': this.urgencia === 'verde', 'text-amber-400': this.urgencia === 'amarillo', 'text-red-400': this.urgencia === 'rojo' };
+        },
+    }
+}
+
 function photoUpload() {
     return {
         previews: [],

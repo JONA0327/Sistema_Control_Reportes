@@ -54,10 +54,11 @@ class User extends Authenticatable
     }
 
     const ROLE_LABELS = [
-        'administrador'  => 'Administrador',
-        'administracion' => 'Administración',
-        'operador'       => 'Operador',
-        'mecanico'       => 'Mecánico',
+        'superadmin'       => 'Superadmin',
+        'administracion'   => 'Administración',
+        'operador'         => 'Operador',
+        'mecanico'         => 'Mecánico',
+        'mecanico_externo' => 'Mecánico Externo',
     ];
 
     public function getRoleLabelAttribute(): string

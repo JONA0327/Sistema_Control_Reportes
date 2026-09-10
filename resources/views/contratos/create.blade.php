@@ -27,7 +27,7 @@
     </div>
 
     <div class="max-w-3xl">
-        <form method="POST" action="{{ route('contratos.store') }}">
+        <form method="POST" action="{{ route('contratos.store') }}" enctype="multipart/form-data">
             @csrf
             @include('contratos._form')
 

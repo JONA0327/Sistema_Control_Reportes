@@ -5,23 +5,42 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
-            <span class="text-white">Egresos y Ingresos</span>
+            <a href="{{ route('ingresos-egresos.index') }}" class="hover:text-gray-300 transition-colors">Egresos y Ingresos</a>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span class="text-white">{{ \App\Models\IngresoEgreso::PAISES[$pais] }}</span>
         </div>
     </x-slot>
 
     {{-- Encabezado --}}
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-white">Egresos y Ingresos</h1>
-            <p class="text-sm text-gray-500 mt-0.5">Control de movimientos financieros de la empresa</p>
+        <div class="flex items-center gap-3">
+            <img src="{{ asset('images/' . ($pais === 'usa' ? 'us.png' : 'mx.png')) }}" alt="{{ \App\Models\IngresoEgreso::PAISES[$pais] }}"
+                 class="w-12 h-12 object-contain rounded-xl border border-gray-700/50 bg-gray-900/40"/>
+            <div>
+                <h1 class="text-2xl font-bold text-white">Egresos y Ingresos · {{ \App\Models\IngresoEgreso::PAISES[$pais] }}</h1>
+                <p class="text-sm text-gray-500 mt-0.5">
+                    <a href="{{ route('ingresos-egresos.index') }}" class="text-red-400 hover:text-red-300 font-medium">Cambiar de país</a>
+                </p>
+            </div>
         </div>
-        <a href="{{ route('ingresos-egresos.create') }}"
-           class="brand-gradient inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg shadow-red-950/40 hover:opacity-90 transition-opacity">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Nuevo movimiento
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('ingresos-egresos.historico', ['pais' => $pais]) }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-800/60 border border-gray-700/50 text-gray-200 text-sm font-medium rounded-xl hover:bg-gray-700 hover:text-white transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Histórico
+            </a>
+            <a href="{{ route('ingresos-egresos.create', ['pais' => $pais]) }}"
+               class="brand-gradient inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg shadow-red-950/40 hover:opacity-90 transition-opacity">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Nuevo movimiento
+            </a>
+        </div>
     </div>
 
     {{-- Alertas --}}
@@ -50,33 +69,6 @@
         </div>
     </div>
 
-    {{-- Dividido por país (la IA clasifica automáticamente según el destino) --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        @foreach($resumenPorPais as $codigoPais => $totales)
-            @php $balancePais = $totales['ingresos'] - $totales['egresos']; @endphp
-            <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl p-5">
-                <p class="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                    <span>{{ $codigoPais === 'usa' ? '🇺🇸' : '🇲🇽' }}</span>
-                    {{ \App\Models\IngresoEgreso::PAISES[$codigoPais] }}
-                </p>
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <p class="text-xs text-gray-500">Ingresos</p>
-                        <p class="text-sm font-bold text-green-400 mt-0.5">${{ number_format($totales['ingresos'], 2) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Egresos</p>
-                        <p class="text-sm font-bold text-red-400 mt-0.5">${{ number_format($totales['egresos'], 2) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Balance</p>
-                        <p class="text-sm font-bold {{ $balancePais >= 0 ? 'text-white' : 'text-red-400' }} mt-0.5">${{ number_format($balancePais, 2) }}</p>
-                    </div>
-                </div>
-            </div>
-        @endforeach
-    </div>
-
     {{-- Tarjeta principal --}}
     <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl overflow-hidden">
 
@@ -99,19 +91,13 @@
                     <option value="ingreso" class="bg-gray-900" {{ $tipo === 'ingreso' ? 'selected' : '' }}>Ingresos</option>
                     <option value="egreso" class="bg-gray-900" {{ $tipo === 'egreso' ? 'selected' : '' }}>Egresos</option>
                 </select>
-                <select name="pais" onchange="this.form.submit()"
-                        class="px-3 py-2 bg-gray-900/80 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
-                    <option value="" class="bg-gray-900">Todos los países</option>
-                    @foreach(\App\Models\IngresoEgreso::PAISES as $codigoPais => $nombrePais)
-                        <option value="{{ $codigoPais }}" class="bg-gray-900" {{ $pais === $codigoPais ? 'selected' : '' }}>{{ $nombrePais }}</option>
-                    @endforeach
-                </select>
+                <input type="hidden" name="pais" value="{{ $pais }}"/>
                 <button type="submit"
                         class="px-4 py-2 bg-gray-700/60 border border-gray-600/40 text-gray-300 text-sm rounded-xl hover:bg-gray-700 transition-colors">
                     Buscar
                 </button>
-                @if($search || $tipo || $pais)
-                    <a href="{{ route('ingresos-egresos.index') }}"
+                @if($search || $tipo)
+                    <a href="{{ route('ingresos-egresos.index', ['pais' => $pais]) }}"
                        class="px-4 py-2 bg-gray-700/30 border border-gray-600/30 text-gray-500 text-sm rounded-xl hover:text-gray-300 transition-colors">
                         Limpiar
                     </a>
@@ -130,7 +116,6 @@
                         <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Fecha</th>
                         <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Concepto</th>
                         <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3 hidden md:table-cell">Categoría</th>
-                        <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3 hidden sm:table-cell">País</th>
                         <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3 hidden lg:table-cell">Registrado por</th>
                         <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Monto</th>
                         <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Acciones</th>
@@ -163,9 +148,6 @@
                         </td>
                         <td class="px-5 py-3 hidden md:table-cell">
                             <span class="text-sm text-gray-400">{{ $movimiento->categoria ?: '—' }}</span>
-                        </td>
-                        <td class="px-5 py-3 hidden sm:table-cell text-center" title="{{ \App\Models\IngresoEgreso::PAISES[$movimiento->pais] ?? 'México' }}">
-                            <span class="text-lg">{{ $movimiento->pais === 'usa' ? '🇺🇸' : '🇲🇽' }}</span>
                         </td>
                         <td class="px-5 py-3 hidden lg:table-cell">
                             <span class="text-sm text-gray-400">{{ $movimiento->user?->name }}</span>
@@ -221,7 +203,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-16 text-center">
+                        <td colspan="6" class="px-5 py-16 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-12 h-12 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center">
                                     <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,8 +212,8 @@
                                     </svg>
                                 </div>
                                 <p class="text-sm text-gray-500">No se encontraron movimientos</p>
-                                @if($search || $tipo || $pais)
-                                    <a href="{{ route('ingresos-egresos.index') }}" class="text-xs text-red-500 hover:text-red-400">Limpiar filtros</a>
+                                @if($search || $tipo)
+                                    <a href="{{ route('ingresos-egresos.index', ['pais' => $pais]) }}" class="text-xs text-red-500 hover:text-red-400">Limpiar filtros</a>
                                 @endif
                             </div>
                         </td>

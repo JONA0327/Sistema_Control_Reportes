@@ -48,8 +48,25 @@ class ContratoController extends Controller
         $data['incluye_estacionamiento'] = $request->boolean('incluye_estacionamiento', true);
         $data['user_id'] = $request->user()->id;
 
+        $anticipoDetalles = $this->validatedAnticipoDetalles($request);
+
         $contrato = Contrato::create($data);
-        $this->syncAnticipoIngreso($contrato);
+
+        // Si el contrato trae un anticipo con detalles (fecha, método, evidencia,
+        // notas), se crea también un ContratoAnticipo formal para que tenga su
+        // folio, comprobante PDF y aparezca en la sección "Anticipos formalizados".
+        // El IngresoEgreso se crea desde el boot hook del modelo formal — y para
+        // evitar duplicarlo, después NO llamamos syncAnticipoIngreso() porque ese
+        // toma la columna legacy `anticipo` y generaría un segundo ingreso por
+        // el mismo monto.
+        $seCreoAnticipoFormal = false;
+        if ($contrato->anticipo > 0) {
+            $seCreoAnticipoFormal = $this->crearAnticipoFormalDesdeFormulario($contrato, $anticipoDetalles, $request);
+        }
+
+        if (! $seCreoAnticipoFormal) {
+            $this->syncAnticipoIngreso($contrato);
+        }
         $this->syncViajePendiente($contrato);
 
         return redirect()->route('contratos.index')
@@ -61,6 +78,7 @@ class ContratoController extends Controller
         $buses = Bus::orderBy('num_bus')->get();
         $contrato->load([
             'pagos' => fn ($q) => $q->with('user')->latest('fecha_pago')->latest('id'),
+            'anticipos' => fn ($q) => $q->with('user')->latest('fecha_anticipo')->latest('id'),
         ]);
 
         return view('contratos.edit', compact('contrato', 'buses'));
@@ -237,5 +255,67 @@ class ContratoController extends Controller
             'lugar_firma' => ['nullable', 'string', 'max:255'],
             'fecha_firma' => ['required', 'date'],
         ]);
+    }
+
+    /**
+     * Valida los campos opcionales del anticipo que vienen del formulario
+     * de creación. Si el usuario dejó el monto en 0 estos campos no se
+     * piden; si el monto es > 0, la fecha pasa a ser obligatoria.
+     */
+    private function validatedAnticipoDetalles(Request $request): array
+    {
+        $anticipo = (float) $request->input('anticipo', 0);
+
+        return $request->validate([
+            'anticipo_fecha' => [$anticipo > 0 ? 'required' : 'nullable', 'date'],
+            'anticipo_metodo_pago' => ['nullable', 'string', 'max:255'],
+            'anticipo_evidencia' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,pdf', 'max:5120'],
+            'anticipo_notas' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'anticipo_fecha.required' => 'La fecha del anticipo es obligatoria cuando el monto es mayor a 0.',
+            'anticipo_evidencia.mimes' => 'La evidencia debe ser una imagen (jpg, png, gif, webp) o un PDF.',
+        ]);
+    }
+
+    /**
+     * Crea el ContratoAnticipo formal a partir de los datos del formulario
+     * de creación del contrato. Devuelve true si lo creó, false si no
+     * había datos suficientes (por ejemplo, monto = 0).
+     */
+    private function crearAnticipoFormalDesdeFormulario(Contrato $contrato, array $detalles, Request $request): bool
+    {
+        if ($contrato->anticipo <= 0) {
+            return false;
+        }
+
+        $payload = [
+            'monto' => (float) $contrato->anticipo,
+            'fecha_anticipo' => $detalles['anticipo_fecha'] ?? $contrato->fecha_firma?->format('Y-m-d') ?? now()->format('Y-m-d'),
+            'metodo_pago' => $detalles['anticipo_metodo_pago'] ?? null,
+            'notas' => $detalles['anticipo_notas'] ?? null,
+            'user_id' => $request->user()->id,
+        ];
+
+        if ($request->hasFile('anticipo_evidencia')) {
+            $archivo = $request->file('anticipo_evidencia');
+            $extension = $archivo->getClientOriginalExtension();
+            $nombre = pathinfo($archivo->getClientOriginalName(), PATHINFO_FILENAME);
+            $nombreLimpio = \Illuminate\Support\Str::slug($nombre);
+            $filename = sprintf(
+                'anticipos/%d/%s-%s.%s',
+                $contrato->id,
+                $nombreLimpio ?: 'evidencia',
+                now()->format('Ymd-His'),
+                $extension
+            );
+            \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory(dirname($filename));
+            $archivo->storeAs(dirname($filename), basename($filename), 'public');
+            $payload['evidencia_path'] = $filename;
+            $payload['evidencia_nombre_original'] = $archivo->getClientOriginalName();
+        }
+
+        $contrato->anticipos()->create($payload);
+
+        return true;
     }
 }

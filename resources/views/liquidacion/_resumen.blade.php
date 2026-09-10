@@ -75,10 +75,27 @@
             <p class="text-sm text-white font-medium">${{ number_format($resumen['total_gastos_realizados'], 2) }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-500">Ganancia estimada <span class="text-gray-600">(15%)</span></p>
+            <p class="text-xs text-gray-500">
+                Ganancia estimada
+                @if($resumen['doble_operador'])
+                    <span class="text-gray-600">(10% c/u · doble operador)</span>
+                @else
+                    <span class="text-gray-600">(15%)</span>
+                @endif
+            </p>
             <p class="text-sm text-white font-medium">${{ number_format($resumen['ganancia_estimada'], 2) }}</p>
         </div>
     </div>
+
+    @if($resumen['doble_operador'] && $liquidacion->viaje->segundoOperador)
+        <div class="mt-3 px-3 py-2 bg-gray-900/40 border border-gray-700/40 rounded-lg">
+            <p class="text-xs text-gray-400">
+                Viaje con doble operador: <span class="text-white">{{ $liquidacion->viaje->operador->name }} {{ $liquidacion->viaje->operador->last_name }}</span>
+                (titular, gestiona los gastos) y <span class="text-white">{{ $liquidacion->viaje->segundoOperador->name }} {{ $liquidacion->viaje->segundoOperador->last_name }}</span>
+                (segundo operador, consulta sin editar). Cada uno gana 10% del costo del viaje en vez del 15% de un solo operador.
+            </p>
+        </div>
+    @endif
 
     @if($resumen['exceso_gasto'] > 0)
         <div class="mt-3 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">

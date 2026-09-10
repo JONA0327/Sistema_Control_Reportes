@@ -57,25 +57,29 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('reports.orden.piezas.store', $report) }}" enctype="multipart/form-data" class="space-y-3" x-data="{ preview: null }">
+    <form method="POST" action="{{ route('reports.orden.piezas.store', $report) }}" enctype="multipart/form-data" class="space-y-3"
+          x-data="{ preview: null, fileName: '', setFile(file) { if (!file || !file.type.startsWith('image/')) return; this.preview = URL.createObjectURL(file); this.fileName = file.name; }, clearFile() { this.preview = null; this.fileName = ''; document.getElementById('evidencia').value = ''; } }">
         @csrf
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            @foreach(\App\Models\OrdenTrabajoPieza::ACCIONES as $val => $label)
-            <label class="relative cursor-pointer">
-                <input type="radio" name="accion" value="{{ $val }}" class="sr-only peer" {{ old('accion') === $val ? 'checked' : '' }}>
-                <div class="flex items-center justify-center text-center px-3 py-2.5 rounded-xl border border-gray-700 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-600/10 transition-all">
-                    <span class="text-xs font-medium text-gray-300">{{ $label }}</span>
-                </div>
-            </label>
-            @endforeach
+        <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">¿Qué se hizo con la pieza? <span class="text-red-500">*</span></label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                @foreach(\App\Models\OrdenTrabajoPieza::ACCIONES as $val => $label)
+                <label class="relative cursor-pointer">
+                    <input type="radio" name="accion" value="{{ $val }}" class="sr-only peer" {{ old('accion') === $val ? 'checked' : '' }}>
+                    <div class="flex items-center justify-center text-center px-3 py-2.5 rounded-xl border border-gray-700 bg-gray-900/40 peer-checked:border-red-500 peer-checked:bg-red-600/10 transition-all">
+                        <span class="text-xs font-medium text-gray-300">{{ $label }}</span>
+                    </div>
+                </label>
+                @endforeach
+            </div>
+            @error('accion')
+                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+            @enderror
         </div>
-        @error('accion')
-            <p class="text-xs text-red-400">{{ $message }}</p>
-        @enderror
 
         <div class="flex flex-wrap gap-3">
             <div class="flex-1 min-w-48">
-                <label for="pieza" class="block text-xs font-medium text-gray-400 mb-1.5">Pieza / componente</label>
+                <label for="pieza" class="block text-xs font-medium text-gray-400 mb-1.5">Pieza / componente <span class="text-red-500">*</span></label>
                 <input type="text" id="pieza" name="pieza" value="{{ old('pieza') }}"
                        class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('pieza') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                        placeholder="Ej: Balata delantera izquierda"/>
@@ -95,20 +99,31 @@
             <label class="block text-xs font-medium text-gray-400 mb-1.5">
                 Evidencia fotográfica <span class="text-red-500">*</span>
             </label>
-            <div class="flex items-center gap-3">
-                <div class="w-16 h-16 rounded-xl border-2 border-dashed border-gray-700 overflow-hidden flex items-center justify-center bg-gray-900/60 flex-shrink-0">
-                    <img x-show="preview" :src="preview" class="w-full h-full object-cover" alt="Preview"/>
-                    <svg x-show="!preview" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
+            <p class="text-xs text-gray-600 mb-2">Sube una foto clara de la pieza retirada o instalada. Es obligatoria para llevar control del taller.</p>
+
+            <div x-show="!preview">
                 <label for="evidencia"
-                       class="flex-1 flex items-center justify-center px-3.5 py-3 border border-dashed {{ $errors->has('evidencia') ? 'border-red-500' : 'border-gray-700' }} rounded-xl cursor-pointer bg-gray-900/40 hover:bg-gray-900/60 hover:border-gray-600 transition-all">
-                    <span class="text-xs text-gray-500">Tomar foto o adjuntar imagen</span>
+                       class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed {{ $errors->has('evidencia') ? 'border-red-500' : 'border-gray-700' }} rounded-xl cursor-pointer bg-gray-900/40 hover:bg-gray-900/60 hover:border-red-600/50 transition-all"
+                       @dragover.prevent @drop.prevent="setFile($event.dataTransfer.files[0])">
+                    <svg class="w-7 h-7 text-gray-600 mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    <p class="text-sm text-gray-500">📷 Tomar foto o <span class="text-red-400">adjuntar imagen</span></p>
                 </label>
-                <input type="file" id="evidencia" name="evidencia" accept="image/*" class="hidden"
-                       @change="preview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null"/>
             </div>
+
+            <div x-show="preview" x-cloak class="flex items-center gap-3 px-3.5 py-2.5 bg-gray-900/40 border border-gray-700/50 rounded-xl">
+                <img :src="preview" class="w-14 h-14 object-cover rounded-lg border border-gray-700/50 flex-shrink-0" alt="Vista previa"/>
+                <span class="text-xs text-gray-300 truncate flex-1" x-text="fileName"></span>
+                <button type="button" @click="clearFile()" class="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0" title="Quitar foto">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <input type="file" id="evidencia" name="evidencia" accept="image/*" class="hidden"
+                   @change="setFile($event.target.files[0])"/>
             @error('evidencia')
                 <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
             @enderror
