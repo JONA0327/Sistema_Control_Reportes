@@ -113,13 +113,28 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        if ($user->id === auth()->id()) {
+            return redirect()->route('users.index')
+                ->with('error', 'No puedes eliminar tu propia cuenta.');
+        }
+
         if ($user->photo) {
             Storage::disk('public')->delete($user->photo);
         }
 
-        $user->delete();
+        try {
+            $user->delete();
 
-        return redirect()->route('users.index')
-            ->with('success', "Usuario eliminado correctamente.");
+            return redirect()->route('users.index')
+                ->with('success', 'Usuario eliminado correctamente.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            $habiaActivo = (bool) $user->is_active;
+            $user->forceFill(['is_active' => false])->save();
+
+            return redirect()->route('users.index')
+                ->with('success', $habiaActivo
+                    ? "El usuario tiene registros asociados (viajes, reportes, etc.), por lo que fue desactivado en lugar de eliminado. Podés reactivarlo desde su perfil."
+                    : 'El usuario ya estaba desactivado y tiene registros asociados, no se pudo eliminar.');
+        }
     }
 }
