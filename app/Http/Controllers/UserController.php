@@ -44,7 +44,7 @@ class UserController extends Controller
             'name'      => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'username'  => ['required', 'string', 'max:255', 'unique:users'],
-            'carnet'    => ['required', 'string', 'max:255', 'unique:users'],
+            'carnet'    => ['nullable', 'string', 'max:255', 'unique:users', Rule::requiredIf($request->input('role') === 'operador')],
             'email'     => ['required', 'email', 'unique:users'],
             'role'      => ['required', 'exists:roles,name'],
             'photo'     => ['nullable', 'image', 'max:2048'],
@@ -52,6 +52,10 @@ class UserController extends Controller
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
+
+        if ($data['role'] !== 'operador') {
+            $data['carnet'] = null;
+        }
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $request->file('photo')->store('photos', 'public');
@@ -83,7 +87,7 @@ class UserController extends Controller
             'name'      => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'username'  => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'carnet'    => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'carnet'    => ['nullable', 'string', 'max:255', Rule::unique('users')->ignore($user->id), Rule::requiredIf($request->input('role') === 'operador')],
             'email'     => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'password'  => ['nullable', 'string', 'min:8', 'confirmed'],
             'role'      => ['required', 'exists:roles,name'],
@@ -92,6 +96,10 @@ class UserController extends Controller
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
+
+        if ($data['role'] !== 'operador') {
+            $data['carnet'] = null;
+        }
 
         if ($request->hasFile('photo')) {
             if ($user->photo) {

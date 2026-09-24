@@ -38,7 +38,8 @@
     </div>
 
     <div class="max-w-2xl">
-        <form method="POST" action="{{ route('users.update', $user) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('users.update', $user) }}" enctype="multipart/form-data"
+              x-data="{ role: '{{ old('role', $userRole) }}' }">
             @csrf
             @method('PUT')
 
@@ -92,11 +93,12 @@
                             @enderror
                         </div>
 
-                        <div>
+                        <div x-show="role === 'operador'" x-cloak>
                             <label for="carnet" class="block text-xs font-medium text-gray-400 mb-1.5">
                                 Carnet <span class="text-red-500">*</span>
                             </label>
                             <input type="text" id="carnet" name="carnet" value="{{ old('carnet', $user->carnet) }}"
+                                   x-bind:required="role === 'operador'"
                                    class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('carnet') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors font-mono"/>
                             @error('carnet')
                                 <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
@@ -119,12 +121,12 @@
                             <label for="role" class="block text-xs font-medium text-gray-400 mb-1.5">
                                 Rol <span class="text-red-500">*</span>
                             </label>
-                            <select id="role" name="role"
+                            <select id="role" name="role" x-model="role"
                                     class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('role') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
-                                @foreach($roles as $role)
-                                    <option value="{{ $role->name }}" class="bg-gray-900"
-                                            {{ old('role', $userRole) === $role->name ? 'selected' : '' }}>
-                                        {{ ucfirst($role->name) }}
+                                @foreach($roles as $roleOption)
+                                    <option value="{{ $roleOption->name }}" class="bg-gray-900"
+                                            {{ old('role', $userRole) === $roleOption->name ? 'selected' : '' }}>
+                                        {{ ucfirst($roleOption->name) }}
                                     </option>
                                 @endforeach
                             </select>
