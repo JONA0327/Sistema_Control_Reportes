@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NewUserPasswordMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
@@ -43,7 +46,6 @@ class UserController extends Controller
             'username'  => ['required', 'string', 'max:255', 'unique:users'],
             'carnet'    => ['required', 'string', 'max:255', 'unique:users'],
             'email'     => ['required', 'email', 'unique:users'],
-            'password'  => ['required', 'string', 'min:8', 'confirmed'],
             'role'      => ['required', 'exists:roles,name'],
             'photo'     => ['nullable', 'image', 'max:2048'],
             'is_active' => ['boolean'],
@@ -55,14 +57,17 @@ class UserController extends Controller
             $data['photo'] = $request->file('photo')->store('photos', 'public');
         }
 
-        $data['password'] = Hash::make($data['password']);
+        $temporaryPassword = Str::password(12, symbols: false);
+        $data['password'] = Hash::make($temporaryPassword);
         unset($data['role']);
 
         $user = User::create($data);
         $user->assignRole($request->role);
 
+        Mail::to($user->email)->send(new NewUserPasswordMail($user, $temporaryPassword));
+
         return redirect()->route('users.index')
-            ->with('success', "Usuario {$user->name} creado correctamente.");
+            ->with('success', "Usuario {$user->name} creado correctamente. Se envió la contraseña temporal a {$user->email}.");
     }
 
     public function edit(User $user)

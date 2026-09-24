@@ -24,8 +24,9 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 gap-4 max-w-2xl">
 
+        @if($showViajes)
         {{-- ─── Viajes activos ───────────────────────────────────── --}}
         <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-700/40 flex items-center justify-between">
@@ -69,7 +70,9 @@
                 </div>
             @endcan
         </div>
+        @endif
 
+        @if($showGastos)
         {{-- ─── Gastos cerrados recientemente ────────────────────── --}}
         <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-700/40 flex items-center justify-between">
@@ -116,7 +119,9 @@
                 </div>
             @endcan
         </div>
+        @endif
 
+        @if($showReportes)
         {{-- ─── Reportes de camiones ──────────────────────────────── --}}
         <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-700/40 flex items-center justify-between">
@@ -165,6 +170,7 @@
                 <a href="{{ route('reports.index') }}" class="text-xs text-red-500 hover:text-red-400 font-medium">Ver todos los reportes</a>
             </div>
         </div>
+        @endif
     </div>
 
 </x-app-layout>

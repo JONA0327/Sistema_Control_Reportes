@@ -192,34 +192,17 @@
 
                 {{-- Sección: Contraseña --}}
                 <div class="px-6 py-5">
-                    <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                        <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center text-white flex-shrink-0">
+                    <div class="flex items-start gap-3 px-4 py-3 bg-gray-900/40 border border-gray-700/50 rounded-xl">
+                        <span class="w-5 h-5 brand-gradient rounded-md flex items-center justify-center text-white flex-shrink-0 mt-0.5">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
                         </span>
-                        Contraseña
-                    </h2>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="password" class="block text-xs font-medium text-gray-400 mb-1.5">
-                                Contraseña <span class="text-red-500">*</span>
-                            </label>
-                            <input type="password" id="password" name="password"
-                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('password') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-                                   placeholder="Mínimo 8 caracteres"/>
-                            @error('password')
-                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label for="password_confirmation" class="block text-xs font-medium text-gray-400 mb-1.5">
-                                Confirmar contraseña <span class="text-red-500">*</span>
-                            </label>
-                            <input type="password" id="password_confirmation" name="password_confirmation"
-                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-                                   placeholder="Repite la contraseña"/>
+                            <p class="text-sm font-medium text-white">Contraseña temporal</p>
+                            <p class="text-xs text-gray-500 mt-0.5">
+                                Se generará automáticamente y se enviará por correo a la dirección indicada arriba.
+                            </p>
                         </div>
                     </div>
                 </div>
