@@ -10,24 +10,24 @@ $mesesEs = [
     <meta charset="utf-8">
     <title>Contrato {{ $contrato->folio }}</title>
     <style>
-        @page { margin: 26px 34px; }
+        @page { margin: 16px 34px; }
         * { box-sizing: border-box; }
         body {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 10.5px;
+            font-size: 10px;
             color: #1f2933;
-            line-height: 1.5;
+            line-height: 1.3;
         }
 
-        .header-table { width: 100%; margin-bottom: 14px; }
+        .header-table { width: 100%; margin-bottom: 8px; }
         .header-table td { vertical-align: top; }
-        .brand-logo { width: 130px; }
-        .header-right { width: 150px; }
+        .brand-logo { width: 110px; }
+        .header-right { width: 130px; }
         .header-right table { width: 100%; border-collapse: collapse; }
         .header-right td { text-align: center; padding: 0; }
-        .autobus-img { width: 130px; }
+        .autobus-img { width: 110px; }
         .folio-box {
-            margin-top: 8px;
+            margin-top: 5px;
             border: 1.5px solid #b91c1c;
             border-radius: 4px;
             padding: 5px 10px;
@@ -37,86 +37,86 @@ $mesesEs = [
 
         .doc-title {
             text-align: center;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 2.5px solid #b91c1c;
-            padding-bottom: 8px;
-            margin: 0 0 10px 0;
+            padding-bottom: 5px;
+            margin: 0 0 6px 0;
         }
 
-        .intro-text { text-align: center; font-size: 9.5px; color: #374151; margin-bottom: 10px; }
+        .intro-text { text-align: center; font-size: 9px; color: #374151; margin-bottom: 6px; }
         .intro-text strong { color: #1f2933; }
 
-        table.kv-line { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
-        table.kv-line td { padding: 2px 0; font-size: 10.5px; }
+        table.kv-line { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+        table.kv-line td { padding: 1px 0; font-size: 10px; }
         table.kv-line td.k { color: #6b7280; font-size: 8.5px; text-transform: uppercase; white-space: nowrap; padding-right: 6px; }
         table.kv-line td.v { font-weight: bold; border-bottom: 0.75px solid #9ca3af; padding-left: 4px; }
 
         h2.section-title {
-            font-size: 10.5px;
+            font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #ffffff;
             background-color: #1f2933;
-            padding: 4px 8px;
-            margin: 10px 0 6px 0;
+            padding: 3px 8px;
+            margin: 6px 0 4px 0;
         }
 
-        table.data-grid { width: 100%; border-collapse: collapse; margin-bottom: 4px; table-layout: fixed; }
-        table.data-grid td { padding: 3px 8px 3px 0; vertical-align: top; }
+        table.data-grid { width: 100%; border-collapse: collapse; margin-bottom: 2px; table-layout: fixed; }
+        table.data-grid td { padding: 2px 8px 2px 0; vertical-align: top; }
         table.data-grid td.label { color: #6b7280; font-size: 8.5px; text-transform: uppercase; display: block; }
-        table.data-grid td.value { color: #1f2933; font-weight: bold; font-size: 10.5px; }
+        table.data-grid td.value { color: #1f2933; font-weight: bold; font-size: 10px; }
 
         .box {
             border: 0.75px solid #d1d5db;
             border-radius: 4px;
-            padding: 8px 10px;
-            margin-bottom: 8px;
+            padding: 5px 10px;
+            margin-bottom: 5px;
             background-color: #f9fafb;
         }
-        .box .label { color: #6b7280; font-size: 8.5px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .box .label { color: #6b7280; font-size: 8.5px; text-transform: uppercase; display: block; margin-bottom: 2px; }
         .highlight-note {
             display: block;
-            margin-top: 6px;
-            padding: 4px 8px;
+            margin-top: 4px;
+            padding: 3px 8px;
             background-color: #fef08a;
             border: 0.75px solid #ca8a04;
             border-radius: 3px;
             font-weight: bold;
-            font-size: 9.5px;
+            font-size: 9px;
         }
 
-        .costos-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        .costos-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
         .costos-table td {
             border: 1px solid #1f2933;
-            padding: 8px 10px;
+            padding: 5px 10px;
             width: 33.33%;
             text-align: center;
         }
-        .costos-table .label { display: block; font-size: 8.5px; color: #6b7280; text-transform: uppercase; margin-bottom: 3px; }
-        .costos-table .value { font-size: 13px; font-weight: bold; }
+        .costos-table .label { display: block; font-size: 8.5px; color: #6b7280; text-transform: uppercase; margin-bottom: 2px; }
+        .costos-table .value { font-size: 12px; font-weight: bold; }
 
-        .clausulas { margin: 8px 0; padding-left: 16px; font-size: 9px; color: #374151; }
-        .clausulas li { margin-bottom: 4px; }
+        .clausulas { margin: 5px 0; padding-left: 16px; font-size: 8.3px; color: #374151; }
+        .clausulas li { margin-bottom: 2px; }
         .clausulas .clausula-highlight { background-color: #fef08a; font-weight: bold; padding: 1px 3px; }
 
-        .firma-fecha { margin: 14px 0 4px 0; font-size: 10px; text-align: center; }
+        .firma-fecha { margin: 8px 0 3px 0; font-size: 9.5px; text-align: center; }
 
-        .signatures-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        .signatures-table { width: 100%; margin-top: 10px; border-collapse: collapse; }
         .signatures-table td { width: 50%; text-align: center; vertical-align: top; padding: 0 20px; }
-        .sign-line { border-top: 1px solid #1f2933; margin-top: 30px; padding-top: 4px; }
-        .sign-name { font-weight: bold; font-size: 10.5px; }
-        .sign-role { color: #6b7280; font-size: 9px; margin-top: 1px; }
+        .sign-line { border-top: 1px solid #1f2933; margin-top: 16px; padding-top: 3px; }
+        .sign-name { font-weight: bold; font-size: 10px; }
+        .sign-role { color: #6b7280; font-size: 8.5px; margin-top: 1px; }
 
         .footer-note {
-            margin-top: 16px;
-            font-size: 8px;
+            margin-top: 8px;
+            font-size: 7.5px;
             color: #9ca3af;
             text-align: center;
             border-top: 0.5px solid #e5e7eb;
-            padding-top: 4px;
+            padding-top: 3px;
         }
     </style>
 </head>
@@ -227,7 +227,7 @@ $mesesEs = [
         @endunless
     </div>
 
-    <div style="font-size: 8.5px; color: #6b7280; margin-bottom: 6px;">
+    <div style="font-size: 8px; color: #6b7280; margin-bottom: 4px;">
         Nota: solo se visitarán los puntos aquí señalados. Cualquier punto adicional requerido puede generar un costo extra,
         el cual deberá cubrirse en ese mismo momento con el operador de la unidad.
     </div>
