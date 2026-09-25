@@ -130,10 +130,34 @@
                 @enderror
             </div>
 
+            @php
+                $hsRaw = old('hora_salida', $contrato?->hora_salida);
+                $hsParts = $hsRaw ? explode(':', $hsRaw) : [];
+                $hsH = isset($hsParts[0]) ? str_pad($hsParts[0], 2, '0', STR_PAD_LEFT) : '';
+                $hsM = isset($hsParts[1]) ? str_pad($hsParts[1], 2, '0', STR_PAD_LEFT) : '';
+            @endphp
             <div>
-                <label for="hora_salida" class="block text-xs font-medium text-gray-400 mb-1.5">Hora de salida</label>
-                <input type="time" id="hora_salida" name="hora_salida" value="{{ old('hora_salida', $contrato?->hora_salida) }}"
-                       class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('hora_salida') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"/>
+                <label for="hora_salida_h" class="block text-xs font-medium text-gray-400 mb-1.5">
+                    Hora de salida <span class="text-gray-600 font-normal">(formato 24 hrs)</span>
+                </label>
+                <div class="flex items-center gap-2" x-data="{ h: '{{ $hsH }}', m: '{{ $hsM }}' }">
+                    <select id="hora_salida_h" x-model="h"
+                            class="flex-1 px-2 py-2.5 bg-gray-900/80 border {{ $errors->has('hora_salida') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm text-center focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                        <option value="" class="bg-gray-900">HH</option>
+                        @for ($i = 0; $i < 24; $i++)
+                            <option value="{{ sprintf('%02d', $i) }}" class="bg-gray-900">{{ sprintf('%02d', $i) }}</option>
+                        @endfor
+                    </select>
+                    <span class="text-gray-500 font-medium">:</span>
+                    <select id="hora_salida_m" x-model="m"
+                            class="flex-1 px-2 py-2.5 bg-gray-900/80 border {{ $errors->has('hora_salida') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm text-center focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                        <option value="" class="bg-gray-900">MM</option>
+                        @for ($i = 0; $i < 60; $i++)
+                            <option value="{{ sprintf('%02d', $i) }}" class="bg-gray-900">{{ sprintf('%02d', $i) }}</option>
+                        @endfor
+                    </select>
+                    <input type="hidden" name="hora_salida" :value="h !== '' ? (h + ':' + (m !== '' ? m : '00')) : ''"/>
+                </div>
                 @error('hora_salida')
                     <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                 @enderror
@@ -150,10 +174,34 @@
                 @enderror
             </div>
 
+            @php
+                $hrRaw = old('hora_regreso', $contrato?->hora_regreso);
+                $hrParts = $hrRaw ? explode(':', $hrRaw) : [];
+                $hrH = isset($hrParts[0]) ? str_pad($hrParts[0], 2, '0', STR_PAD_LEFT) : '';
+                $hrM = isset($hrParts[1]) ? str_pad($hrParts[1], 2, '0', STR_PAD_LEFT) : '';
+            @endphp
             <div>
-                <label for="hora_regreso" class="block text-xs font-medium text-gray-400 mb-1.5">Hora de regreso</label>
-                <input type="time" id="hora_regreso" name="hora_regreso" value="{{ old('hora_regreso', $contrato?->hora_regreso) }}"
-                       class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('hora_regreso') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"/>
+                <label for="hora_regreso_h" class="block text-xs font-medium text-gray-400 mb-1.5">
+                    Hora de regreso <span class="text-gray-600 font-normal">(formato 24 hrs)</span>
+                </label>
+                <div class="flex items-center gap-2" x-data="{ h: '{{ $hrH }}', m: '{{ $hrM }}' }">
+                    <select id="hora_regreso_h" x-model="h"
+                            class="flex-1 px-2 py-2.5 bg-gray-900/80 border {{ $errors->has('hora_regreso') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm text-center focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                        <option value="" class="bg-gray-900">HH</option>
+                        @for ($i = 0; $i < 24; $i++)
+                            <option value="{{ sprintf('%02d', $i) }}" class="bg-gray-900">{{ sprintf('%02d', $i) }}</option>
+                        @endfor
+                    </select>
+                    <span class="text-gray-500 font-medium">:</span>
+                    <select id="hora_regreso_m" x-model="m"
+                            class="flex-1 px-2 py-2.5 bg-gray-900/80 border {{ $errors->has('hora_regreso') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm text-center focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                        <option value="" class="bg-gray-900">MM</option>
+                        @for ($i = 0; $i < 60; $i++)
+                            <option value="{{ sprintf('%02d', $i) }}" class="bg-gray-900">{{ sprintf('%02d', $i) }}</option>
+                        @endfor
+                    </select>
+                    <input type="hidden" name="hora_regreso" :value="h !== '' ? (h + ':' + (m !== '' ? m : '00')) : ''"/>
+                </div>
                 @error('hora_regreso')
                     <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                 @enderror
