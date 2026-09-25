@@ -26,14 +26,30 @@
                 <p class="text-sm text-gray-500 mt-0.5">{{ $contrato->cliente_nombre }}</p>
             </div>
         </div>
-        <a href="{{ route('contratos.pdf', $contrato) }}" target="_blank"
-           class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-800/60 border border-gray-700/50 text-gray-300 text-sm font-medium rounded-xl hover:bg-gray-700 hover:text-white transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            Ver PDF
-        </a>
+        <div class="relative" x-data="{ pdfOpen: false }" @click.outside="pdfOpen = false">
+            <button type="button" @click="pdfOpen = !pdfOpen"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-800/60 border border-gray-700/50 text-gray-300 text-sm font-medium rounded-xl hover:bg-gray-700 hover:text-white transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Ver PDF
+                <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div x-show="pdfOpen" x-cloak x-transition
+                 class="absolute right-0 mt-2 w-44 bg-gray-800 border border-gray-700/60 rounded-xl shadow-lg overflow-hidden z-20">
+                <a href="{{ route('contratos.pdf', $contrato) }}?tamano=oficio" target="_blank"
+                   class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                    Tamaño oficio
+                </a>
+                <a href="{{ route('contratos.pdf', $contrato) }}?tamano=carta" target="_blank"
+                   class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                    Tamaño carta
+                </a>
+            </div>
+        </div>
     </div>
 
     @if (session('success'))

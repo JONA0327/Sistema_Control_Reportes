@@ -63,15 +63,27 @@
                             <span class="text-xs text-gray-600 italic">Sin evidencia</span>
                         @endif
 
-                        <a href="{{ route('contratos.anticipos.comprobante', [$contrato, $anticipo]) }}"
-                           target="_blank"
-                           class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-red-500/10 text-red-300 border border-red-500/20 hover:bg-red-500/20 transition-colors"
-                           title="Descargar comprobante PDF para el cliente">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                            PDF
-                        </a>
+                        <div class="relative" x-data="{ pdfOpen: false }" @click.outside="pdfOpen = false">
+                            <button type="button" @click="pdfOpen = !pdfOpen"
+                                    class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-red-500/10 text-red-300 border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                                    title="Descargar comprobante PDF para el cliente">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                PDF
+                            </button>
+                            <div x-show="pdfOpen" x-cloak x-transition @click="pdfOpen = false"
+                                 class="absolute right-0 mt-2 w-36 bg-gray-800 border border-gray-700/60 rounded-xl shadow-lg overflow-hidden z-20">
+                                <a href="{{ route('contratos.anticipos.comprobante', [$contrato, $anticipo]) }}?tamano=carta" target="_blank"
+                                   class="block px-3.5 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                                    Tamaño carta
+                                </a>
+                                <a href="{{ route('contratos.anticipos.comprobante', [$contrato, $anticipo]) }}?tamano=oficio" target="_blank"
+                                   class="block px-3.5 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                                    Tamaño oficio
+                                </a>
+                            </div>
+                        </div>
 
                         @unless($anticipo->cancelado)
                             <button type="button" @click="cancelando = !cancelando"

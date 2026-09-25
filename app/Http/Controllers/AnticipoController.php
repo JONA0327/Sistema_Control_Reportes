@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Contrato;
 use App\Models\ContratoAnticipo;
+use App\Support\PdfPaperSize;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -108,11 +109,12 @@ class AnticipoController extends Controller
     }
 
     /**
-     * Comprobante PDF (media carta) para entregar al cliente. Lleva
-     * el logo, los datos del cliente, el detalle del anticipo y, si
-     * hay evidencia, una nota de que se adjuntó al sistema.
+     * Comprobante PDF (carta u oficio, según ?tamano=) para entregar
+     * al cliente. Lleva el logo, los datos del cliente, el detalle
+     * del anticipo y, si hay evidencia, una nota de que se adjuntó
+     * al sistema.
      */
-    public function comprobantePdf(Contrato $contrato, ContratoAnticipo $anticipo)
+    public function comprobantePdf(Request $request, Contrato $contrato, ContratoAnticipo $anticipo)
     {
         abort_unless($anticipo->contrato_id === $contrato->id, 404);
 
@@ -121,11 +123,13 @@ class AnticipoController extends Controller
 
         $logoBase64 = base64_encode(file_get_contents(public_path('Logo.png')));
 
+        $tamano = $request->query('tamano') === 'oficio' ? 'oficio' : 'carta';
+
         $pdf = Pdf::loadView('contratos.anticipos.pdf', [
             'contrato' => $contrato,
             'anticipo' => $anticipo,
             'logoBase64' => $logoBase64,
-        ])->setPaper('letter', 'portrait'); // letter ≈ media carta en US/MX
+        ])->setPaper(...PdfPaperSize::forDompdf($tamano));
 
         return $pdf->stream("comprobante-anticipo-{$anticipo->folio}.pdf");
     }

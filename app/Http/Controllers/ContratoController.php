@@ -8,6 +8,7 @@ use App\Models\ContratoPago;
 use App\Models\IngresoEgreso;
 use App\Models\Viaje;
 use App\Services\GroqAiService;
+use App\Support\PdfPaperSize;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
@@ -216,18 +217,20 @@ class ContratoController extends Controller
         }
     }
 
-    public function exportPdf(Contrato $contrato)
+    public function exportPdf(Request $request, Contrato $contrato)
     {
         $contrato->load('bus');
 
         $logoBase64 = base64_encode(file_get_contents(public_path('Logo.png')));
         $autobusBase64 = base64_encode(file_get_contents(public_path('autobus.png')));
 
+        $tamano = $request->query('tamano') === 'carta' ? 'carta' : 'oficio';
+
         $pdf = Pdf::loadView('contratos.pdf', [
             'contrato' => $contrato,
             'logoBase64' => $logoBase64,
             'autobusBase64' => $autobusBase64,
-        ])->setPaper([0, 0, 612, 936]); // Oficio (8.5" x 13")
+        ])->setPaper(...PdfPaperSize::forDompdf($tamano));
 
         return $pdf->stream("contrato-{$contrato->folio}.pdf");
     }
