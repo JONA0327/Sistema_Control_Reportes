@@ -19,7 +19,7 @@
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-lg font-bold
                                              {{ $anticipo->cancelado ? 'bg-gray-800 text-gray-500 border border-gray-700 line-through' : 'bg-green-500/10 text-green-400 border border-green-500/20' }}">
-                                    +${{ number_format($anticipo->monto, 2) }}
+                                    +${{ number_format(round($anticipo->monto), 0) }}
                                 </span>
                                 @if($anticipo->cancelado)
                                     <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg font-medium bg-red-500/10 text-red-400 border border-red-500/20">

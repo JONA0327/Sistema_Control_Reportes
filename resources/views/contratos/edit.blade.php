@@ -152,15 +152,15 @@
                 <div class="grid grid-cols-3 gap-3 mb-4">
                     <div class="bg-gray-900/40 border border-gray-700/50 rounded-xl px-3.5 py-3">
                         <p class="text-xs text-gray-500">Costo total</p>
-                        <p class="text-base font-bold text-white mt-0.5">${{ number_format($contrato->costo_viaje, 2) }}</p>
+                        <p class="text-base font-bold text-white mt-0.5">${{ number_format(round($contrato->costo_viaje), 0) }}</p>
                     </div>
                     <div class="bg-gray-900/40 border border-gray-700/50 rounded-xl px-3.5 py-3">
                         <p class="text-xs text-gray-500">Total anticipado</p>
-                        <p class="text-base font-bold text-green-400 mt-0.5">${{ number_format($contrato->total_pagado, 2) }}</p>
+                        <p class="text-base font-bold text-green-400 mt-0.5">${{ number_format($contrato->total_pagado, 0) }}</p>
                     </div>
                     <div class="bg-gray-900/40 border border-gray-700/50 rounded-xl px-3.5 py-3">
                         <p class="text-xs text-gray-500">Falta por liquidar</p>
-                        <p class="text-base font-bold {{ $contrato->esta_liquidado ? 'text-white' : 'text-red-400' }} mt-0.5">${{ number_format($contrato->saldo_pendiente, 2) }}</p>
+                        <p class="text-base font-bold {{ $contrato->esta_liquidado ? 'text-white' : 'text-red-400' }} mt-0.5">${{ number_format($contrato->saldo_pendiente, 0) }}</p>
                     </div>
                 </div>
 

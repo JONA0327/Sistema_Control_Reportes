@@ -72,6 +72,19 @@ $montoRedondeado = round((float) $anticipo->monto);
         table.kv td.k { color: #6b7280; width: 45%; }
         table.kv td.v { font-weight: bold; color: #1f2933; text-align: right; }
 
+        table.restante-box {
+            width: 100%;
+            margin-top: 6px;
+            border-collapse: collapse;
+            background-color: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-radius: 4px;
+        }
+        .restante-box td { padding: 5px 8px; vertical-align: middle; }
+        .restante-box .label { font-size: 7.5px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.3px; }
+        .restante-box .valor { font-size: 12px; font-weight: bold; color: #b91c1c; text-align: right; }
+        .restante-box .valor.ok { color: #15803d; }
+
         .nota-box {
             background-color: #f9fafb;
             border: 0.5px solid #d1d5db;
@@ -157,6 +170,15 @@ $montoRedondeado = round((float) $anticipo->monto);
                     <tr>
                         <td class="k">Registrado por</td>
                         <td class="v">{{ $anticipo->user->name ?? '—' }}</td>
+                    </tr>
+                </table>
+
+                <table class="restante-box">
+                    <tr>
+                        <td class="label">{{ $contrato->esta_liquidado ? 'Contrato liquidado' : 'Saldo restante' }}</td>
+                        <td class="valor {{ $contrato->esta_liquidado ? 'ok' : '' }}">
+                            ${{ number_format($contrato->saldo_pendiente, 0) }}
+                        </td>
                     </tr>
                 </table>
 

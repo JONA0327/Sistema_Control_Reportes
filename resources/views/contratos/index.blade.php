@@ -96,7 +96,7 @@
                             <span class="text-sm text-gray-400">{{ $contrato->fecha_salida->format('d/m/Y') }}</span>
                         </td>
                         <td class="px-5 py-3 text-right">
-                            <span class="text-sm font-bold text-white">${{ number_format($contrato->costo_viaje, 2) }}</span>
+                            <span class="text-sm font-bold text-white">${{ number_format(round($contrato->costo_viaje), 0) }}</span>
                         </td>
                         <td class="px-5 py-3 text-center hidden sm:table-cell">
                             @if($contrato->esta_liquidado)
@@ -106,7 +106,7 @@
                                 </span>
                             @else
                                 <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                      title="Saldo pendiente: ${{ number_format($contrato->saldo_pendiente, 2) }}">
+                                      title="Saldo pendiente: ${{ number_format($contrato->saldo_pendiente, 0) }}">
                                     <span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>
                                     Pendiente
                                 </span>
