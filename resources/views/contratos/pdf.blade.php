@@ -21,7 +21,7 @@ $mesesEs = [
 
         .header-table { width: 100%; margin-bottom: 8px; }
         .header-table td { vertical-align: top; }
-        .brand-logo { width: 150px; }
+        .brand-logo { width: 200px; }
         .header-right { width: 130px; }
         .header-right table { width: 100%; border-collapse: collapse; }
         .header-right td { text-align: center; padding: 0; }
@@ -125,7 +125,7 @@ $mesesEs = [
     {{-- Encabezado --}}
     <table class="header-table">
         <tr>
-            <td style="width: 140px;">
+            <td style="width: 210px;">
                 <img src="data:image/png;base64,{{ $logoBase64 }}" class="brand-logo">
             </td>
             <td></td>
