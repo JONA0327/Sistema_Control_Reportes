@@ -87,7 +87,7 @@ class ContratoController extends Controller
 
     public function update(Request $request, Contrato $contrato)
     {
-        $data = $this->validated($request);
+        $data = $this->validated($request, isUpdate: true);
         $data['incluye_estacionamiento'] = $request->boolean('incluye_estacionamiento', true);
 
         $contrato->update($data);
@@ -235,7 +235,13 @@ class ContratoController extends Controller
         return $pdf->stream("contrato-{$contrato->folio}.pdf");
     }
 
-    private function validated(Request $request): array
+    /**
+     * Reglas compartidas por store() y update(). El campo `anticipo` solo
+     * se captura en el formulario de creación (en edición se maneja aparte
+     * desde "Anticipos formalizados"), así que en edición no se manda en
+     * el request y no debe ser obligatorio ni sobrescribirse con vacío.
+     */
+    private function validated(Request $request, bool $isUpdate = false): array
     {
         return $request->validate([
             'cliente_nombre' => ['required', 'string', 'max:255'],
@@ -253,7 +259,9 @@ class ContratoController extends Controller
             'punto_partida_llegada' => ['nullable', 'string', 'max:255'],
             'itinerario' => ['nullable', 'string', 'max:2000'],
             'costo_viaje' => ['required', 'numeric', 'min:0'],
-            'anticipo' => ['required', 'numeric', 'min:0', 'lte:costo_viaje'],
+            'anticipo' => $isUpdate
+                ? ['sometimes', 'numeric', 'min:0', 'lte:costo_viaje']
+                : ['required', 'numeric', 'min:0', 'lte:costo_viaje'],
             'notas' => ['nullable', 'string', 'max:1000'],
             'lugar_firma' => ['nullable', 'string', 'max:255'],
             'fecha_firma' => ['required', 'date'],
