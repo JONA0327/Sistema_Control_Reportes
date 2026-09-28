@@ -15,7 +15,7 @@
 
         .header-table { width: 100%; margin-bottom: 8px; }
         .header-table td { vertical-align: top; }
-        .brand-logo { width: 110px; }
+        .brand-logo { width: 130px; }
         .header-right { width: 200px; text-align: right; }
 
         .folio-box { border: 1.5px solid #b91c1c; border-radius: 4px; padding: 6px 12px; display: inline-block; }

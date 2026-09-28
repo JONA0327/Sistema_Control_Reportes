@@ -21,7 +21,7 @@ $mesesEs = [
 
         .header-table { width: 100%; margin-bottom: 8px; }
         .header-table td { vertical-align: top; }
-        .brand-logo { width: 110px; }
+        .brand-logo { width: 150px; }
         .header-right { width: 130px; }
         .header-right table { width: 100%; border-collapse: collapse; }
         .header-right td { text-align: center; padding: 0; }
