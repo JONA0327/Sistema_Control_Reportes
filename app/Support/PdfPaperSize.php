@@ -13,7 +13,7 @@ class PdfPaperSize
     {
         return match ($tamano) {
             'oficio'      => [[0, 0, 612, 936], 'portrait'], // 8.5" x 13"
-            'media_carta' => [[0, 0, 396, 612], 'portrait'], // Media carta, 5.5" x 8.5"
+            'media_carta' => [[0, 0, 612, 396], 'portrait'], // Media carta (estilo pagaré), 8.5" x 5.5"
             default       => ['letter', 'portrait'],          // Carta, 8.5" x 11"
         };
     }

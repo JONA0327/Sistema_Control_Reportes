@@ -237,15 +237,15 @@ $mesesEs = [
         <tr>
             <td>
                 <span class="label">Costo del viaje</span>
-                <span class="value">${{ number_format($contrato->costo_viaje, 2) }}</span>
+                <span class="value">${{ number_format(round($contrato->costo_viaje), 0) }}</span>
             </td>
             <td>
                 <span class="label">Anticipo</span>
-                <span class="value">${{ number_format($contrato->anticipo, 2) }}</span>
+                <span class="value">${{ number_format(round($contrato->anticipo), 0) }}</span>
             </td>
             <td>
                 <span class="label">Resto</span>
-                <span class="value">${{ number_format($contrato->resto, 2) }}</span>
+                <span class="value">${{ number_format($contrato->resto, 0) }}</span>
             </td>
         </tr>
     </table>
