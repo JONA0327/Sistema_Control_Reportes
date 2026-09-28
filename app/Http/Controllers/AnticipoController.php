@@ -14,7 +14,7 @@ class AnticipoController extends Controller
     public function store(Request $request, Contrato $contrato)
     {
         $data = $request->validate([
-            'monto' => ['required', 'numeric', 'min:0.01'],
+            'monto' => ['required', 'integer', 'min:1'],
             'fecha_anticipo' => ['required', 'date'],
             'metodo_pago' => ['nullable', 'string', 'max:255'],
             'notas' => ['nullable', 'string', 'max:1000'],
@@ -50,7 +50,7 @@ class AnticipoController extends Controller
         abort_unless($anticipo->contrato_id === $contrato->id, 404);
 
         $data = $request->validate([
-            'monto' => ['required', 'numeric', 'min:0.01'],
+            'monto' => ['required', 'integer', 'min:1'],
             'fecha_anticipo' => ['required', 'date'],
             'metodo_pago' => ['nullable', 'string', 'max:255'],
             'notas' => ['nullable', 'string', 'max:1000'],
@@ -109,27 +109,26 @@ class AnticipoController extends Controller
     }
 
     /**
-     * Comprobante PDF (carta u oficio, según ?tamano=) para entregar
-     * al cliente. Lleva el logo, los datos del cliente, el detalle
-     * del anticipo y, si hay evidencia, una nota de que se adjuntó
-     * al sistema.
+     * Comprobante PDF simple, a media carta, para entregar al cliente.
+     * Es un recibo del anticipo, no un estado de cuenta: lleva los
+     * logos, el monto y los datos mínimos del anticipo, sin el detalle
+     * completo del contrato.
      */
-    public function comprobantePdf(Request $request, Contrato $contrato, ContratoAnticipo $anticipo)
+    public function comprobantePdf(Contrato $contrato, ContratoAnticipo $anticipo)
     {
         abort_unless($anticipo->contrato_id === $contrato->id, 404);
 
-        $contrato->load('bus');
         $anticipo->load('user');
 
         $logoBase64 = base64_encode(file_get_contents(public_path('Logo.png')));
-
-        $tamano = $request->query('tamano') === 'oficio' ? 'oficio' : 'carta';
+        $autobusBase64 = base64_encode(file_get_contents(public_path('autobus.png')));
 
         $pdf = Pdf::loadView('contratos.anticipos.pdf', [
             'contrato' => $contrato,
             'anticipo' => $anticipo,
             'logoBase64' => $logoBase64,
-        ])->setPaper(...PdfPaperSize::forDompdf($tamano));
+            'autobusBase64' => $autobusBase64,
+        ])->setPaper(...PdfPaperSize::forDompdf('media_carta'));
 
         return $pdf->stream("comprobante-anticipo-{$anticipo->folio}.pdf");
     }

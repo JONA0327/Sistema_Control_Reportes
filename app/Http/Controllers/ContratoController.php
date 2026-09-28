@@ -258,10 +258,10 @@ class ContratoController extends Controller
             'destino' => ['required', 'string', 'max:255'],
             'punto_partida_llegada' => ['nullable', 'string', 'max:255'],
             'itinerario' => ['nullable', 'string', 'max:2000'],
-            'costo_viaje' => ['required', 'numeric', 'min:0'],
+            'costo_viaje' => ['required', 'integer', 'min:0'],
             'anticipo' => $isUpdate
-                ? ['sometimes', 'numeric', 'min:0', 'lte:costo_viaje']
-                : ['required', 'numeric', 'min:0', 'lte:costo_viaje'],
+                ? ['sometimes', 'integer', 'min:0', 'lte:costo_viaje']
+                : ['required', 'integer', 'min:0', 'lte:costo_viaje'],
             'notas' => ['nullable', 'string', 'max:1000'],
             'lugar_firma' => ['nullable', 'string', 'max:255'],
             'fecha_firma' => ['required', 'date'],

@@ -56,19 +56,26 @@ class Contrato extends Model
         return 'CT-'.str_pad((string) $this->id, 5, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Estos tres montos se redondean al peso porque los contratos ya
+     * manejan enteros; así los centavos que quedaron en datos viejos
+     * (de cuando sí se permitían decimales) no dejan un saldo pendiente
+     * fantasma de unos centavos en un contrato que en la práctica ya
+     * está liquidado. El costo total del contrato es la referencia.
+     */
     public function getRestoAttribute(): float
     {
-        return (float) $this->costo_viaje - $this->anticipo_efectivo;
+        return round((float) $this->costo_viaje - $this->anticipo_efectivo);
     }
 
     public function getTotalPagadoAttribute(): float
     {
-        return $this->anticipo_efectivo + (float) $this->pagos->sum('monto');
+        return round($this->anticipo_efectivo + (float) $this->pagos->sum('monto'));
     }
 
     public function getSaldoPendienteAttribute(): float
     {
-        return max(0.0, (float) $this->costo_viaje - $this->total_pagado);
+        return max(0.0, round((float) $this->costo_viaje - $this->total_pagado));
     }
 
     public function getEstaLiquidadoAttribute(): bool
