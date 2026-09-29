@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bus;
+use App\Models\Movimiento;
 use App\Models\Report;
 use App\Models\ReportEvidence;
 use App\Models\User;
@@ -83,6 +84,13 @@ class ReportController extends Controller
             ->get();
         Notification::send($destinatarios, new NuevoReporteNotification($report));
 
+        Movimiento::registrar(
+            'reportes',
+            'creado',
+            "Reporte {$report->folio} creado para el bus #{$report->bus->num_bus}",
+            movible: $report,
+        );
+
         return redirect()->route('reports.index')
             ->with('success', "Reporte {$report->folio} creado correctamente.");
     }
@@ -123,6 +131,8 @@ class ReportController extends Controller
 
         $data = $request->validate($rules);
 
+        $estadoAnterior = $report->status;
+
         if ($canEditStatus) {
             if ($data['status'] === 'resuelto' && ! $report->resolved_at) {
                 $data['resolved_at'] = now();
@@ -141,6 +151,22 @@ class ReportController extends Controller
 
         $this->storeEvidencias($request, $report);
 
+        if ($canEditStatus && $data['status'] !== $estadoAnterior) {
+            Movimiento::registrar(
+                'reportes',
+                'estado_cambiado',
+                "Reporte {$report->folio}: estado cambiado de \"{$estadoAnterior}\" a \"{$data['status']}\"",
+                movible: $report,
+            );
+        } else {
+            Movimiento::registrar(
+                'reportes',
+                'editado',
+                "Reporte {$report->folio} editado",
+                movible: $report,
+            );
+        }
+
         return redirect()->route('reports.edit', $report)
             ->with('success', "Reporte actualizado correctamente.");
     }
@@ -150,6 +176,13 @@ class ReportController extends Controller
         foreach ($report->evidences as $evidencia) {
             Storage::disk('public')->delete($evidencia->evidence_path);
         }
+
+        Movimiento::registrar(
+            'reportes',
+            'eliminado',
+            "Reporte {$report->folio} eliminado",
+        );
+
         $report->delete();
 
         return redirect()->route('reports.index')

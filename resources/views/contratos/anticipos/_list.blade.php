@@ -8,7 +8,7 @@
 @else
     <div class="space-y-2">
         @foreach($anticipos as $anticipo)
-            <div class="px-3.5 py-3 bg-gray-900/40 border rounded-xl {{ $anticipo->cancelado ? 'border-gray-800 opacity-60' : 'border-gray-700/40' }}" x-data="{ cancelando: false }">
+            <div class="px-3.5 py-3 bg-gray-900/40 border rounded-xl {{ $anticipo->cancelado ? 'border-gray-800 opacity-60' : 'border-gray-700/40' }}" x-data="{ cancelando: false, editando: false }">
                 <div class="flex items-start justify-between gap-3 flex-wrap">
                     <div class="flex items-start gap-3 flex-1 min-w-0">
                         <span class="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border font-mono font-bold shrink-0
@@ -26,6 +26,12 @@
                                         Cancelado
                                     </span>
                                 @endif
+                                @if($anticipo->fue_editado)
+                                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                          title="Editado el {{ $anticipo->editado_at->format('d/m/Y H:i') }}{{ $anticipo->motivo_edicion ? ' — '.$anticipo->motivo_edicion : '' }}">
+                                        Anticipo modificado
+                                    </span>
+                                @endif
                                 <span class="text-xs text-gray-400">
                                     {{ $anticipo->metodo_pago ?: 'Sin método especificado' }}
                                 </span>
@@ -36,6 +42,12 @@
                             </div>
                             @if($anticipo->notas)
                                 <p class="text-xs text-gray-500 mt-1 truncate" title="{{ $anticipo->notas }}">{{ $anticipo->notas }}</p>
+                            @endif
+                            @if($anticipo->fue_editado)
+                                <p class="text-xs text-amber-400/80 mt-1">
+                                    Última edición: {{ $anticipo->editado_at->format('d/m/Y H:i') }}
+                                    @if($anticipo->motivo_edicion) — {{ $anticipo->motivo_edicion }} @endif
+                                </p>
                             @endif
                             @if($anticipo->cancelado)
                                 <p class="text-xs text-red-400 mt-1">
@@ -73,19 +85,60 @@
                             PDF
                         </a>
 
-                        @unless($anticipo->cancelado)
-                            <button type="button" @click="cancelando = !cancelando"
-                                    class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-gray-700/40 text-gray-400 border border-gray-600/40 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-colors"
-                                    title="Cancelar anticipo">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                                Cancelar
-                            </button>
-                        @endunless
+                        @can('anticipos.editar')
+                            @unless($anticipo->cancelado)
+                                <button type="button" @click="editando = !editando; cancelando = false"
+                                        class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-gray-700/40 text-gray-400 border border-gray-600/40 hover:bg-blue-500/10 hover:text-blue-400 hover:border-blue-500/20 transition-colors"
+                                        title="Editar monto del anticipo">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Editar
+                                </button>
+                            @endunless
+                        @endcan
+
+                        @can('anticipos.eliminar')
+                            @unless($anticipo->cancelado)
+                                <button type="button" @click="cancelando = !cancelando; editando = false"
+                                        class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-gray-700/40 text-gray-400 border border-gray-600/40 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-colors"
+                                        title="Cancelar anticipo">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                    Cancelar
+                                </button>
+                            @endunless
+                        @endcan
                     </div>
                 </div>
 
+                @can('anticipos.editar')
+                @unless($anticipo->cancelado)
+                <div x-show="editando" x-cloak class="mt-3 pt-3 border-t border-gray-700/40">
+                    <form method="POST" action="{{ route('contratos.anticipos.update', [$contrato, $anticipo]) }}" class="flex flex-wrap items-start gap-2">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="fecha_anticipo" value="{{ $anticipo->fecha_anticipo->format('Y-m-d') }}">
+                        <input type="hidden" name="metodo_pago" value="{{ $anticipo->metodo_pago }}">
+                        <input type="hidden" name="notas" value="{{ $anticipo->notas }}">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-xs">$</span>
+                            <input type="number" step="1" min="1" name="monto" required value="{{ (int) round($anticipo->monto) }}"
+                                   class="w-32 pl-6 pr-2 py-2 bg-gray-900/80 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"/>
+                        </div>
+                        <input type="text" name="motivo_edicion" required placeholder="Motivo de la modificación (obligatorio)"
+                               class="flex-1 min-w-0 px-3 py-2 bg-gray-900/80 border border-gray-700 rounded-lg text-white text-xs placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"/>
+                        <button type="submit" class="px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            Guardar cambio
+                        </button>
+                    </form>
+                    <p class="mt-1.5 text-xs text-gray-600">El nuevo monto y el motivo quedan registrados; el anticipo se marca como "modificado" en el sistema (no se refleja en el comprobante PDF).</p>
+                </div>
+                @endunless
+                @endcan
+
+                @can('anticipos.eliminar')
                 @unless($anticipo->cancelado)
                 <div x-show="cancelando" x-cloak class="mt-3 pt-3 border-t border-gray-700/40">
                     <form method="POST" action="{{ route('contratos.anticipos.cancelar', [$contrato, $anticipo]) }}" class="flex flex-wrap gap-2">
@@ -100,6 +153,7 @@
                     <p class="mt-1.5 text-xs text-gray-600">El anticipo no se borra: queda marcado como cancelado, con folio y motivo, y deja de contar en el saldo.</p>
                 </div>
                 @endunless
+                @endcan
             </div>
         @endforeach
     </div>

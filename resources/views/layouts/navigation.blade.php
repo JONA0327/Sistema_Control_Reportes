@@ -261,6 +261,29 @@
         </a>
         @endcan
 
+        @can('anticipos.ver')
+        {{-- Anticipos --}}
+        <a href="{{ route('anticipos.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
+                  {{ request()->routeIs('anticipos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('anticipos.*') ? 'text-red-400' : 'text-gray-500 group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span x-show="sidebarOpen"
+                  x-transition:enter="transition-opacity duration-150 delay-75"
+                  x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                  x-transition:leave="transition-opacity duration-75" x-transition:leave-end="opacity-0"
+                  class="text-sm font-medium whitespace-nowrap flex-1">
+                Anticipos
+            </span>
+            <div x-show="!sidebarOpen"
+                 class="absolute left-full ml-3 px-2 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                Anticipos
+            </div>
+        </a>
+        @endcan
+
         @can('contratos_historicos.ver')
         {{-- Contratos históricos --}}
         <a href="{{ route('contratos-historicos.index') }}"
@@ -279,6 +302,28 @@
             <div x-show="!sidebarOpen"
                  class="absolute left-full ml-3 px-2 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
                 Contratos históricos
+            </div>
+        </a>
+        @endcan
+
+        @can('bitacora.ver')
+        {{-- Movimientos --}}
+        <a href="{{ route('movimientos.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative
+                  {{ request()->routeIs('movimientos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('movimientos.*') ? 'text-red-400' : 'text-gray-500 group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+            <span x-show="sidebarOpen"
+                  x-transition:enter="transition-opacity duration-150 delay-75"
+                  x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                  x-transition:leave="transition-opacity duration-75" x-transition:leave-end="opacity-0"
+                  class="text-sm font-medium whitespace-nowrap flex-1">
+                Movimientos
+            </span>
+            <div x-show="!sidebarOpen"
+                 class="absolute left-full ml-3 px-2 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                Movimientos
             </div>
         </a>
         @endcan
@@ -461,6 +506,17 @@
             <span class="text-sm font-medium">Contratos</span>
         </a>
         @endcan
+        @can('anticipos.ver')
+        <a href="{{ route('anticipos.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
+                  {{ request()->routeIs('anticipos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span class="text-sm font-medium">Anticipos</span>
+        </a>
+        @endcan
         @can('contratos_historicos.ver')
         <a href="{{ route('contratos-historicos.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
@@ -469,6 +525,16 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
             <span class="text-sm font-medium">Contratos históricos</span>
+        </a>
+        @endcan
+        @can('bitacora.ver')
+        <a href="{{ route('movimientos.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
+                  {{ request()->routeIs('movimientos.*') ? 'bg-red-600/15 text-red-400 border border-red-700/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/70' }}">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+            <span class="text-sm font-medium">Movimientos</span>
         </a>
         @endcan
     </nav>

@@ -24,6 +24,8 @@ class ContratoAnticipo extends Model
         'cancelado_at',
         'motivo_cancelacion',
         'cancelado_por',
+        'editado_at',
+        'motivo_edicion',
     ];
 
     protected function casts(): array
@@ -32,6 +34,7 @@ class ContratoAnticipo extends Model
             'fecha_anticipo' => 'date',
             'monto' => 'decimal:2',
             'cancelado_at' => 'datetime',
+            'editado_at' => 'datetime',
         ];
     }
 
@@ -108,6 +111,11 @@ class ContratoAnticipo extends Model
     public function getCanceladoAttribute(): bool
     {
         return ! is_null($this->cancelado_at);
+    }
+
+    public function getFueEditadoAttribute(): bool
+    {
+        return ! is_null($this->editado_at);
     }
 
     public function tieneEvidencia(): bool

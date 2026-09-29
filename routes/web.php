@@ -10,6 +10,7 @@ use App\Http\Controllers\IngresoEgresoController;
 use App\Http\Controllers\InventoryItemController;
 use App\Http\Controllers\InventoryPurchaseController;
 use App\Http\Controllers\LiquidacionController;
+use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrdenTrabajoController;
 use App\Http\Controllers\ProfileController;
@@ -75,13 +76,14 @@ Route::middleware('auth')->group(function () {
         Route::post('contratos/{contrato}/pagos', [ContratoController::class, 'storePago'])->name('contratos.pagos.store');
         Route::delete('contratos/pagos/{pago}', [ContratoController::class, 'destroyPago'])->name('contratos.pagos.destroy');
     });
-    Route::middleware('can:contratos.anticipos')->group(function () {
-        Route::post('contratos/{contrato}/anticipos', [AnticipoController::class, 'store'])->name('contratos.anticipos.store');
-        Route::put('contratos/{contrato}/anticipos/{anticipo}', [AnticipoController::class, 'update'])->name('contratos.anticipos.update');
-        Route::patch('contratos/{contrato}/anticipos/{anticipo}/cancelar', [AnticipoController::class, 'cancelar'])->name('contratos.anticipos.cancelar');
+    Route::middleware('can:anticipos.ver')->group(function () {
+        Route::get('anticipos', [AnticipoController::class, 'index'])->name('anticipos.index');
         Route::get('contratos/{contrato}/anticipos/{anticipo}/comprobante', [AnticipoController::class, 'comprobantePdf'])->name('contratos.anticipos.comprobante');
         Route::get('contratos/{contrato}/anticipos/{anticipo}/evidencia', [AnticipoController::class, 'evidencia'])->name('contratos.anticipos.evidencia');
     });
+    Route::post('contratos/{contrato}/anticipos', [AnticipoController::class, 'store'])->name('contratos.anticipos.store')->middleware('can:anticipos.crear');
+    Route::put('contratos/{contrato}/anticipos/{anticipo}', [AnticipoController::class, 'update'])->name('contratos.anticipos.update')->middleware('can:anticipos.editar');
+    Route::patch('contratos/{contrato}/anticipos/{anticipo}/cancelar', [AnticipoController::class, 'cancelar'])->name('contratos.anticipos.cancelar')->middleware('can:anticipos.eliminar');
     Route::resource('contratos', ContratoController::class)->except(['show'])
         ->middlewareFor('index', 'can:contratos.ver')
         ->middlewareFor(['create', 'store'], 'can:contratos.crear')
@@ -91,6 +93,8 @@ Route::middleware('auth')->group(function () {
         ->middlewareFor('index', 'can:contratos_historicos.ver')
         ->middlewareFor('update', 'can:contratos_historicos.editar')
         ->middlewareFor('destroy', 'can:contratos_historicos.eliminar');
+
+    Route::get('movimientos', [MovimientoController::class, 'index'])->name('movimientos.index')->middleware('can:bitacora.ver');
 
     Route::middleware('can:reportes.editar')->group(function () {
         Route::resource('reports', ReportController::class)->only(['edit', 'update']);

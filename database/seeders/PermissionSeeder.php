@@ -15,11 +15,13 @@ class PermissionSeeder extends Seeder
         'viajes' => ['ver', 'editar', 'eliminar'],
         'gastos' => ['ver', 'registrar', 'aprobar'],
         'inventario' => ['ver', 'crear', 'editar', 'eliminar', 'movimientos', 'aprobar'],
-        'contratos' => ['ver', 'crear', 'editar', 'eliminar', 'pagos', 'anticipos'],
+        'contratos' => ['ver', 'crear', 'editar', 'eliminar', 'pagos'],
+        'anticipos' => ['ver', 'crear', 'editar', 'eliminar'],
         'contratos_historicos' => ['ver', 'editar', 'eliminar'],
         'egresos_ingresos' => ['ver', 'crear', 'editar', 'eliminar'],
         'ordenes_trabajo' => ['ver', 'gestionar', 'piezas'],
         'taller_externo' => ['ver'],
+        'bitacora' => ['ver'],
     ];
 
     const ASIGNACIONES = [
@@ -59,5 +61,9 @@ class PermissionSeeder extends Seeder
         foreach (self::ASIGNACIONES as $rolNombre => $permisos) {
             Role::firstOrCreate(['name' => $rolNombre, 'guard_name' => 'web'])->syncPermissions($permisos);
         }
+
+        // Los anticipos se separaron del módulo de contratos y ahora tienen
+        // su propio permiso (anticipos.*), así que el antiguo se elimina.
+        Permission::where('name', 'contratos.anticipos')->delete();
     }
 }

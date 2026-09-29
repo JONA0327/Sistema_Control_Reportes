@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventoryItem;
+use App\Models\Movimiento;
 use App\Models\OrdenTrabajo;
 use App\Models\OrdenTrabajoPieza;
 use App\Models\Report;
@@ -85,6 +86,13 @@ class OrdenTrabajoController extends Controller
             'resolved_at' => now(),
         ]);
         $this->notificarCambioEstado($report, $estadoAnterior, 'resuelto', $request);
+
+        Movimiento::registrar(
+            'reportes',
+            'estado_cambiado',
+            "Reporte {$report->folio}: estado cambiado de \"{$estadoAnterior}\" a \"resuelto\" (orden de trabajo completada)",
+            movible: $report,
+        );
 
         return redirect()->route('reports.orden.show', $report)
             ->with('success', "Reporte {$report->folio} marcado como completado.");

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\IngresoEgreso;
 use App\Models\InventoryItem;
 use App\Models\InventoryPurchase;
+use App\Models\Movimiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -70,6 +71,13 @@ class InventoryPurchaseController extends Controller
             $compra->registrarEgresoAutomatico($request->user()->id);
         });
 
+        Movimiento::registrar(
+            'inventario',
+            'aprobado',
+            "Compra de {$compra->quantity} unidad(es) de \"{$compra->item->name}\" aprobada",
+            movible: $compra->item,
+        );
+
         return back()->with('success', 'Compra validada: se sumó al stock y se registró en gastos.');
     }
 
@@ -87,6 +95,14 @@ class InventoryPurchaseController extends Controller
             'revisado_por'    => $request->user()->id,
             'revisado_at'     => now(),
         ]);
+
+        Movimiento::registrar(
+            'inventario',
+            'rechazado',
+            "Compra de {$compra->quantity} unidad(es) de \"{$compra->item->name}\" rechazada",
+            motivo: $data['motivo_rechazo'] ?? null,
+            movible: $compra->item,
+        );
 
         return back()->with('success', 'Compra rechazada. No se modificó el stock.');
     }

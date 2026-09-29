@@ -6,6 +6,7 @@ use App\Models\Bus;
 use App\Models\Contrato;
 use App\Models\ContratoPago;
 use App\Models\IngresoEgreso;
+use App\Models\Movimiento;
 use App\Models\Viaje;
 use App\Services\GroqAiService;
 use App\Support\PdfPaperSize;
@@ -70,6 +71,13 @@ class ContratoController extends Controller
         }
         $this->syncViajePendiente($contrato);
 
+        Movimiento::registrar(
+            'contratos',
+            'creado',
+            "Contrato {$contrato->folio} creado para {$contrato->cliente_nombre}",
+            movible: $contrato,
+        );
+
         return redirect()->route('contratos.index')
             ->with('success', "Contrato {$contrato->folio} generado correctamente. Se creó su viaje pendiente.");
     }
@@ -94,6 +102,13 @@ class ContratoController extends Controller
         $this->syncAnticipoIngreso($contrato);
         $this->syncViajePendiente($contrato);
 
+        Movimiento::registrar(
+            'contratos',
+            'editado',
+            "Contrato {$contrato->folio} editado",
+            movible: $contrato,
+        );
+
         return redirect()->route('contratos.index')
             ->with('success', "Contrato {$contrato->folio} actualizado correctamente.");
     }
@@ -109,6 +124,12 @@ class ContratoController extends Controller
         if ($viaje && $viaje->esta_pendiente) {
             $viaje->delete();
         }
+
+        Movimiento::registrar(
+            'contratos',
+            'eliminado',
+            "Contrato {$contrato->folio} ({$contrato->cliente_nombre}) eliminado",
+        );
 
         $contrato->delete();
 

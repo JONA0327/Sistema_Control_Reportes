@@ -6,6 +6,7 @@ use App\Models\IngresoEgreso;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
 use App\Models\InventoryPurchase;
+use App\Models\Movimiento;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -78,6 +79,13 @@ class InventoryItemController extends Controller
             ]);
         }
 
+        Movimiento::registrar(
+            'inventario',
+            'creado',
+            "Refacción \"{$item->name}\" ({$item->code}) registrada",
+            movible: $item,
+        );
+
         $mensaje = $esNuevaCompra
             ? "Refacción \"{$item->name}\" registrada. La compra quedó pendiente de validación por administración."
             : "Refacción \"{$item->name}\" registrada correctamente.";
@@ -115,6 +123,13 @@ class InventoryItemController extends Controller
 
         $item->update($data);
 
+        Movimiento::registrar(
+            'inventario',
+            'editado',
+            "Refacción \"{$item->name}\" ({$item->code}) editada",
+            movible: $item,
+        );
+
         return redirect()->route('inventario.edit', $item)
             ->with('success', "Refacción actualizada correctamente.");
     }
@@ -142,6 +157,12 @@ class InventoryItemController extends Controller
             Storage::disk('public')->delete($compra->comprobante_path);
             IngresoEgreso::eliminarDesdeOrigen($compra);
         }
+
+        Movimiento::registrar(
+            'inventario',
+            'eliminado',
+            "Refacción \"{$item->name}\" ({$item->code}) eliminada",
+        );
 
         $item->delete();
 
@@ -182,6 +203,14 @@ class InventoryItemController extends Controller
             );
         });
 
+        Movimiento::registrar(
+            'inventario',
+            'creado',
+            "Registrada {$data['movement_type']} de {$data['quantity']} unidad(es) de \"{$item->name}\" ({$item->code})",
+            motivo: $data['notes'] ?? null,
+            movible: $item,
+        );
+
         return redirect()->route('inventario.edit', $item)
             ->with('success', 'Movimiento registrado correctamente.');
     }
@@ -194,6 +223,13 @@ class InventoryItemController extends Controller
             $movimiento->update(['devuelto_at' => now()]);
             $movimiento->item()->increment('stock_quantity', $movimiento->quantity);
         });
+
+        Movimiento::registrar(
+            'inventario',
+            'editado',
+            "Devolución registrada de \"{$movimiento->item->name}\" ({$movimiento->quantity} unidad(es))",
+            movible: $movimiento->item,
+        );
 
         return back()->with('success', 'Marcado como devuelto. Se actualizó el stock.');
     }
