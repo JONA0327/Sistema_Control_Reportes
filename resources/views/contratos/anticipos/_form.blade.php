@@ -18,11 +18,13 @@
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-sm">$</span>
                 <input type="number" step="1" min="1"
                        id="anticipo-monto" name="monto"
+                       data-money-preview="anticipo-monto-preview"
                        value="{{ old('monto') }}"
                        class="w-full pl-7 pr-3 py-2.5 bg-gray-900/80 border {{ $errors->has('monto') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                        placeholder="0"
                        required>
             </div>
+            <p id="anticipo-monto-preview" class="mt-1 text-xs text-gray-500 font-mono"></p>
             @error('monto')
                 <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
             @enderror

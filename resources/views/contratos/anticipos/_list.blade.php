@@ -8,7 +8,16 @@
 @else
     <div class="space-y-2">
         @foreach($anticipos as $anticipo)
-            <div class="px-3.5 py-3 bg-gray-900/40 border rounded-xl {{ $anticipo->cancelado ? 'border-gray-800 opacity-60' : 'border-gray-700/40' }}" x-data="{ cancelando: false, editando: false }">
+            <div class="px-3.5 py-3 bg-gray-900/40 border rounded-xl {{ $anticipo->cancelado ? 'border-gray-800 opacity-60' : 'border-gray-700/40' }}"
+                 x-data="{
+                    cancelando: false,
+                    editando: false,
+                    montoPreview: '{{ $anticipo->monto > 0 ? '= $'.number_format(round($anticipo->monto), 0) : '' }}',
+                    actualizarPreview(valor) {
+                        const n = parseInt(valor, 10);
+                        this.montoPreview = (!isNaN(n) && n > 0) ? '= $' + n.toLocaleString('es-MX') : '';
+                    },
+                 }">
                 <div class="flex items-start justify-between gap-3 flex-wrap">
                     <div class="flex items-start gap-3 flex-1 min-w-0">
                         <span class="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border font-mono font-bold shrink-0
@@ -122,10 +131,14 @@
                         <input type="hidden" name="fecha_anticipo" value="{{ $anticipo->fecha_anticipo->format('Y-m-d') }}">
                         <input type="hidden" name="metodo_pago" value="{{ $anticipo->metodo_pago }}">
                         <input type="hidden" name="notas" value="{{ $anticipo->notas }}">
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-xs">$</span>
-                            <input type="number" step="1" min="1" name="monto" required value="{{ (int) round($anticipo->monto) }}"
-                                   class="w-32 pl-6 pr-2 py-2 bg-gray-900/80 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"/>
+                        <div>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-xs">$</span>
+                                <input type="number" step="1" min="1" name="monto" required value="{{ (int) round($anticipo->monto) }}"
+                                       @input="actualizarPreview($event.target.value)"
+                                       class="w-32 pl-6 pr-2 py-2 bg-gray-900/80 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"/>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500 font-mono" x-text="montoPreview"></p>
                         </div>
                         <input type="text" name="motivo_edicion" required placeholder="Motivo de la modificación (obligatorio)"
                                class="flex-1 min-w-0 px-3 py-2 bg-gray-900/80 border border-gray-700 rounded-lg text-white text-xs placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"/>

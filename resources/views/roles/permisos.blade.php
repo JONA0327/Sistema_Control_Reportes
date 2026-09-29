@@ -22,10 +22,12 @@
             'gastos' => 'Gastos',
             'inventario' => 'Inventario',
             'contratos' => 'Contratos',
+            'anticipos' => 'Anticipos',
             'contratos_historicos' => 'Contratos históricos',
             'egresos_ingresos' => 'Egresos e Ingresos',
             'ordenes_trabajo' => 'Órdenes de trabajo',
             'taller_externo' => 'Taller externo',
+            'bitacora' => 'Movimientos',
         ];
     @endphp
 

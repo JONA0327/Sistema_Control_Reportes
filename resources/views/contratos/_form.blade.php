@@ -288,10 +288,12 @@
             <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-sm">$</span>
                 <input type="number" step="1" min="0" id="costo_viaje" name="costo_viaje"
+                       data-money-preview="costo_viaje-preview"
                        value="{{ old('costo_viaje', $contrato?->costo_viaje !== null ? round($contrato->costo_viaje) : null) }}"
                        class="w-full pl-7 pr-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('costo_viaje') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                        placeholder="0"/>
             </div>
+            <p id="costo_viaje-preview" class="mt-1 text-xs text-gray-500 font-mono"></p>
             @error('costo_viaje')
                 <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
             @enderror
@@ -319,10 +321,12 @@
             <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-sm">$</span>
                 <input type="number" step="1" min="0" id="anticipo" name="anticipo"
+                       data-money-preview="anticipo-preview"
                        value="{{ old('anticipo', $contrato?->anticipo !== null ? round($contrato->anticipo) : null) }}"
                        class="w-full pl-7 pr-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('anticipo') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                        placeholder="0"/>
             </div>
+            <p id="anticipo-preview" class="mt-1 text-xs text-gray-500 font-mono"></p>
             @error('anticipo')
                 <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
             @enderror
@@ -459,6 +463,32 @@
         anticipoInput.addEventListener('change', toggle);
         // Estado inicial (por si el form viene con old() lleno)
         toggle();
+    })();
+</script>
+@endpush
+@endonce
+
+@once
+@push('scripts')
+<script>
+    // Vista previa formateada ($1,234) de los campos de monto, para que un
+    // error de captura (ej. "5698" en vez de "5700") se note a simple vista
+    // antes de guardar.
+    (function () {
+        document.querySelectorAll('[data-money-preview]').forEach(function (input) {
+            const preview = document.getElementById(input.dataset.moneyPreview);
+            if (!preview) return;
+
+            const actualizar = () => {
+                const valor = parseInt(input.value, 10);
+                preview.textContent = (!isNaN(valor) && valor > 0)
+                    ? '= $' + valor.toLocaleString('es-MX')
+                    : '';
+            };
+
+            input.addEventListener('input', actualizar);
+            actualizar();
+        });
     })();
 </script>
 @endpush
