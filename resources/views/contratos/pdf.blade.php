@@ -189,21 +189,21 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
     <h2 class="section-title">Datos del viaje</h2>
     <table class="data-grid">
         <tr>
-            <td style="width: 25%;">
+            <td style="width: 32%;">
                 <span class="label">Fecha de salida</span>
-                <table style="width:85%; border-collapse:collapse;"><tr><td style="border-bottom:1px solid #9ca3af; padding:6px 0 0 0;">&nbsp;</td></tr></table>
+                <span class="value" style="white-space:nowrap;">{{ $fechaLarga($contrato->fecha_salida) }}</span>
             </td>
-            <td style="width: 25%;">
+            <td style="width: 18%;">
                 <span class="label">Hora de salida</span>
-                <table style="width:70%; border-collapse:collapse;"><tr><td style="border-bottom:1px solid #9ca3af; padding:6px 0 0 0;">&nbsp;</td></tr></table>
+                <span class="value">{{ $contrato->hora_salida ?: '—' }} hrs</span>
             </td>
-            <td style="width: 25%;">
+            <td style="width: 32%;">
                 <span class="label">Fecha de regreso</span>
-                <table style="width:85%; border-collapse:collapse;"><tr><td style="border-bottom:1px solid #9ca3af; padding:6px 0 0 0;">&nbsp;</td></tr></table>
+                <span class="value" style="white-space:nowrap;">{{ $fechaLarga($contrato->fecha_regreso) }}</span>
             </td>
-            <td style="width: 25%;">
+            <td style="width: 18%;">
                 <span class="label">Hora de regreso</span>
-                <table style="width:70%; border-collapse:collapse;"><tr><td style="border-bottom:1px solid #9ca3af; padding:6px 0 0 0;">&nbsp;</td></tr></table>
+                <span class="value">{{ $contrato->hora_regreso ?: '—' }} hrs</span>
             </td>
         </tr>
     </table>
