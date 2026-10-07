@@ -258,7 +258,7 @@
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
                     <input type="checkbox" name="incluye_estacionamiento" value="1"
-                           class="sr-only peer" {{ old('incluye_estacionamiento', $contrato?->incluye_estacionamiento ?? true) ? 'checked' : '' }}>
+                           class="sr-only peer" {{ old('incluye_estacionamiento', $contrato?->incluye_estacionamiento ?? false) ? 'checked' : '' }}>
                     <div class="relative w-11 h-6 bg-gray-700 rounded-full peer
                                 peer-checked:bg-red-600
                                 after:content-[''] after:absolute after:top-[3px] after:left-[3px]

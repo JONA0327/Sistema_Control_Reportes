@@ -48,7 +48,7 @@ class ContratoController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
-        $data['incluye_estacionamiento'] = $request->boolean('incluye_estacionamiento', true);
+        $data['incluye_estacionamiento'] = $request->boolean('incluye_estacionamiento', false);
         $data['user_id'] = $request->user()->id;
 
         $anticipoDetalles = $this->validatedAnticipoDetalles($request);
@@ -97,7 +97,7 @@ class ContratoController extends Controller
     public function update(Request $request, Contrato $contrato)
     {
         $data = $this->validated($request, isUpdate: true);
-        $data['incluye_estacionamiento'] = $request->boolean('incluye_estacionamiento', true);
+        $data['incluye_estacionamiento'] = $request->boolean('incluye_estacionamiento', false);
 
         $contrato->update($data);
         $this->syncAnticipoIngreso($contrato);

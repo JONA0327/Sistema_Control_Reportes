@@ -21,9 +21,10 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
         }
 
         .header-table { width: 100%; margin-bottom: 8px; }
-        .header-table td { vertical-align: top; }
-        .brand-logo { width: 200px; }
-        .header-right { width: 130px; }
+        .header-table td { vertical-align: middle; }
+        .brand-logo { width: 210px; }
+        .header-center { text-align: center; }
+        .header-right { width: 210px; }
         .header-right table { width: 100%; border-collapse: collapse; }
         .header-right td { text-align: center; padding: 0; }
         .autobus-img { width: 110px; }
@@ -36,16 +37,14 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
         .folio-label { font-size: 8px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
         .folio-value { font-size: 15px; font-weight: bold; color: #b91c1c; }
 
-        .doc-title {
-            text-align: center;
-            font-size: 15px;
+        .doc-title-inline {
+            font-size: 14px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border-bottom: 2.5px solid #b91c1c;
-            padding-bottom: 5px;
-            margin: 0 0 6px 0;
+            white-space: nowrap;
         }
+        .header-rule { border-bottom: 2.5px solid #b91c1c; margin: 0 0 6px 0; }
 
         .intro-text { text-align: center; font-size: 9px; color: #374151; margin-bottom: 6px; }
         .intro-text strong { color: #1f2933; }
@@ -129,7 +128,9 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
             <td style="width: 210px;">
                 <img src="data:image/png;base64,{{ $logoBase64 }}" class="brand-logo">
             </td>
-            <td></td>
+            <td class="header-center">
+                <span class="doc-title-inline">Contrato de arrendamiento</span>
+            </td>
             <td class="header-right">
                 <table>
                     <tr><td><img src="data:image/png;base64,{{ $autobusBase64 }}" class="autobus-img"></td></tr>
@@ -145,8 +146,7 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
             </td>
         </tr>
     </table>
-
-    <div class="doc-title">Contrato de arrendamiento</div>
+    <div class="header-rule"></div>
 
     <div class="intro-text">
         Por una parte, como arrendador <strong>Turística Merlo S.A. de C.V.</strong> con domicilio en Av. 20 de Noviembre 1560, Tlaxcala, San Luis Potosí, S.L.P. CP. 78038,
@@ -191,19 +191,19 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
         <tr>
             <td style="width: 25%;">
                 <span class="label">Fecha de salida</span>
-                <span class="value">{{ $fechaLarga($contrato->fecha_salida) }}</span>
+                <table style="width:85%; border-collapse:collapse;"><tr><td style="border-bottom:1px solid #9ca3af; padding:6px 0 0 0;">&nbsp;</td></tr></table>
             </td>
             <td style="width: 25%;">
                 <span class="label">Hora de salida</span>
-                <span class="value">{{ $contrato->hora_salida ?: '—' }} hrs</span>
+                <table style="width:70%; border-collapse:collapse;"><tr><td style="border-bottom:1px solid #9ca3af; padding:6px 0 0 0;">&nbsp;</td></tr></table>
             </td>
             <td style="width: 25%;">
                 <span class="label">Fecha de regreso</span>
-                <span class="value">{{ $fechaLarga($contrato->fecha_regreso) }}</span>
+                <table style="width:85%; border-collapse:collapse;"><tr><td style="border-bottom:1px solid #9ca3af; padding:6px 0 0 0;">&nbsp;</td></tr></table>
             </td>
             <td style="width: 25%;">
                 <span class="label">Hora de regreso</span>
-                <span class="value">{{ $contrato->hora_regreso ?: '—' }} hrs</span>
+                <table style="width:70%; border-collapse:collapse;"><tr><td style="border-bottom:1px solid #9ca3af; padding:6px 0 0 0;">&nbsp;</td></tr></table>
             </td>
         </tr>
     </table>
@@ -224,7 +224,7 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
         <span class="label">Itinerario</span>
         {{ $contrato->itinerario ?: 'Sin itinerario adicional especificado.' }}
         @unless($contrato->incluye_estacionamiento)
-            <span class="highlight-note">Este costo no incluye estacionamientos.</span>
+            <span>Este costo no incluye estacionamientos.</span>
         @endunless
     </div>
 
@@ -256,7 +256,7 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
     <ol class="clausulas">
         <li>El presente contrato es en base a la fecha, hora, destino e itinerario proporcionado por el cliente.</li>
         <li>En caso de incumplimiento del contrato por cualquiera de las partes, el anticipo quedará como indemnización a favor de Turística Merlo S.A. de C.V. o del arrendatario según corresponda, así como no liquidar la totalidad al tiempo indicado en este contrato y se dará por cancelado el viaje.</li>
-        <li @if(! $contrato->incluye_estacionamiento) class="clausula-highlight" @endif>
+        <li>
             El costo del viaje {{ $contrato->incluye_estacionamiento ? 'incluye' : 'no incluye' }} estacionamientos.
         </li>
         <li>En caso de descompostura de la unidad, la empresa se compromete a sustituir la unidad, sin garantizar tener las mismas características y condiciones que la unidad original.</li>
