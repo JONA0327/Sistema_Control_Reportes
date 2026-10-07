@@ -423,7 +423,7 @@
                 <label for="fecha_firma" class="block text-xs font-medium text-gray-400 mb-1.5">
                     Fecha de firma <span class="text-red-500">*</span>
                 </label>
-                <input type="date" id="fecha_firma" name="fecha_firma" value="{{ old('fecha_firma', $contrato?->fecha_firma?->format('Y-m-d') ?? now()->format('Y-m-d')) }}"
+                <input type="date" id="fecha_firma" name="fecha_firma" value="{{ old('fecha_firma', $contrato?->fecha_firma?->format('Y-m-d')) }}"
                        class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('fecha_firma') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"/>
                 @error('fecha_firma')
                     <p class="mt-1 text-xs text-red-400">{{ $message }}</p>

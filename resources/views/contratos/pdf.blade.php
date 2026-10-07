@@ -3,6 +3,7 @@ $mesesEs = [
     1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril', 5 => 'mayo', 6 => 'junio',
     7 => 'julio', 8 => 'agosto', 9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre',
 ];
+$fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $fecha->format('n')]).' del '.$fecha->format('Y');
 ?>
 <!DOCTYPE html>
 <html>
@@ -190,7 +191,7 @@ $mesesEs = [
         <tr>
             <td style="width: 25%;">
                 <span class="label">Fecha de salida</span>
-                <span class="value">{{ $contrato->fecha_salida->format('d/m/Y') }}</span>
+                <span class="value">{{ $fechaLarga($contrato->fecha_salida) }}</span>
             </td>
             <td style="width: 25%;">
                 <span class="label">Hora de salida</span>
@@ -198,7 +199,7 @@ $mesesEs = [
             </td>
             <td style="width: 25%;">
                 <span class="label">Fecha de regreso</span>
-                <span class="value">{{ $contrato->fecha_regreso->format('d/m/Y') }}</span>
+                <span class="value">{{ $fechaLarga($contrato->fecha_regreso) }}</span>
             </td>
             <td style="width: 25%;">
                 <span class="label">Hora de regreso</span>
@@ -272,7 +273,7 @@ $mesesEs = [
     </ol>
 
     <div class="firma-fecha">
-        {{ $contrato->lugar_firma }} a {{ $contrato->fecha_firma->format('d') }} de {{ $mesesEs[(int) $contrato->fecha_firma->format('n')] }} del {{ $contrato->fecha_firma->format('Y') }}
+        {{ $contrato->lugar_firma }} a {{ $fechaLarga($contrato->fecha_firma) }}
     </div>
 
     <div style="text-align: center; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-top: 4px;">

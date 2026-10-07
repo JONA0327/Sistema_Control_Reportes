@@ -9,6 +9,7 @@ use App\Models\IngresoEgreso;
 use App\Models\Movimiento;
 use App\Models\Viaje;
 use App\Services\GroqAiService;
+use App\Support\MoneyNormalizer;
 use App\Support\PdfPaperSize;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -264,7 +265,7 @@ class ContratoController extends Controller
      */
     private function validated(Request $request, bool $isUpdate = false): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'cliente_nombre' => ['required', 'string', 'max:255'],
             'cliente_telefono' => ['nullable', 'string', 'max:50'],
             'cliente_domicilio' => ['nullable', 'string', 'max:255'],
@@ -287,6 +288,13 @@ class ContratoController extends Controller
             'lugar_firma' => ['nullable', 'string', 'max:255'],
             'fecha_firma' => ['required', 'date'],
         ]);
+
+        $data['costo_viaje'] = MoneyNormalizer::snapToHundred($data['costo_viaje']);
+        if (isset($data['anticipo'])) {
+            $data['anticipo'] = MoneyNormalizer::snapToHundred($data['anticipo']);
+        }
+
+        return $data;
     }
 
     /**

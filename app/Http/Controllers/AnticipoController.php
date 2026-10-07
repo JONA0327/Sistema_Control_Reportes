@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Contrato;
 use App\Models\ContratoAnticipo;
 use App\Models\Movimiento;
+use App\Support\MoneyNormalizer;
 use App\Support\PdfPaperSize;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -50,6 +51,7 @@ class AnticipoController extends Controller
             'evidencia' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,pdf', 'max:5120'],
         ]);
 
+        $data['monto'] = MoneyNormalizer::snapToHundred($data['monto']);
         $data['user_id'] = $request->user()->id;
 
         if ($request->hasFile('evidencia')) {
@@ -95,6 +97,7 @@ class AnticipoController extends Controller
             'motivo_edicion' => ['required', 'string', 'max:500'],
         ]);
 
+        $data['monto'] = MoneyNormalizer::snapToHundred($data['monto']);
         $data['editado_at'] = now();
 
         if ($request->hasFile('evidencia')) {
