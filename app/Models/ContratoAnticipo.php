@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\GroqAiService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -54,13 +53,19 @@ class ContratoAnticipo extends Model
         // morph porque IngresoEgreso ya tiene la columna origenable.
         static::created(function (self $anticipo) {
             $anticipo->loadMissing('contrato');
+            // Compras sin cerrar: entra como egreso al cierre del viaje.
+            if ($anticipo->contrato->retiene_movimientos) {
+                return;
+            }
+
             IngresoEgreso::registrarDesdeOrigen($anticipo, [
-                'tipo' => 'ingreso',
+                'tipo' => $anticipo->contrato->tipo_movimiento,
                 'concepto' => "Anticipo {$anticipo->folio} contrato {$anticipo->contrato->folio} - {$anticipo->contrato->cliente_nombre}",
                 'monto' => $anticipo->monto,
                 'fecha' => $anticipo->fecha_anticipo,
-                'categoria' => 'Contratos',
-                'pais' => app(GroqAiService::class)->determinarPais($anticipo->contrato->destino),
+                'categoria' => 'Anticipo',
+                'clasificacion' => $anticipo->contrato->tipo,
+                'pais' => $anticipo->contrato->pais_ingreso,
                 'user_id' => $anticipo->user_id,
             ]);
         });

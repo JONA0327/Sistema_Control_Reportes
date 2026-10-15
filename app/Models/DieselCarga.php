@@ -46,6 +46,16 @@ class DieselCarga extends Model
 
     public function registrarEgresoAutomatico(int $userId): void
     {
+        // Compras sin cerrar: el egreso entra hasta el cierre del viaje.
+        if ($this->viaje->retiene_movimientos) {
+            return;
+        }
+
+        $this->publicarEgreso($userId);
+    }
+
+    public function publicarEgreso(int $userId): void
+    {
         $etiqueta = $this->tipo === 'inicial' ? 'Diésel inicial' : 'Diésel extra';
 
         IngresoEgreso::registrarDesdeOrigen($this, [
@@ -54,7 +64,8 @@ class DieselCarga extends Model
             'monto' => $this->monto,
             'fecha' => $this->reviewed_at ?? now(),
             'categoria' => 'Combustible',
-            'pais' => app(GroqAiService::class)->determinarPais($this->viaje->destino),
+            'clasificacion' => $this->viaje->contrato?->tipo,
+            'pais' => $this->viaje->contrato?->pais_ingreso ?? app(GroqAiService::class)->determinarPais($this->viaje->destino),
             'user_id' => $userId,
         ]);
     }

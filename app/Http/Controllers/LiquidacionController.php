@@ -126,53 +126,15 @@ class LiquidacionController extends Controller
         $liquidacion->load(['viaje.bus', 'viaje.operador', 'viaje.segundoOperador', 'gastos', 'cerradaPor']);
 
         $viaje = $liquidacion->viaje;
-        $resumen = $liquidacion->resumen();
-
-        $dieselInicial = $viaje->dieselCargas()->where('tipo', 'inicial')->first();
-        $dieselExtras = $viaje->dieselCargas()->where('tipo', 'extra')->where('estado_solicitud', 'aprobada')->get();
-
-        // El diésel "de salida" es el que entrega administración antes del viaje;
-        // el "extra" es el que el operador va registrando en el camino, y en la
-        // práctica es el diésel de regreso (puede haber más de un registro extra,
-        // no solo el de salida, y aquí se suman todos).
-        $dieselSalidaMonto = (float) ($dieselInicial->monto ?? $viaje->gasto_diesel_inicio);
-        $litrosSalida = (float) ($dieselInicial->litros ?? $viaje->litros_diesel_inicio ?? 0);
-
-        $dieselLlegadaMonto = (float) $dieselExtras->sum('monto');
-        $litrosLlegada = (float) $dieselExtras->sum('litros');
-
-        $totalDiesel = $dieselSalidaMonto + $dieselLlegadaMonto;
-        $totalLitrosDiesel = $litrosSalida + $litrosLlegada;
-        $costoLitro = $totalLitrosDiesel > 0 ? $totalDiesel / $totalLitrosDiesel : null;
-
-        $gastosPorTipo = $liquidacion->gastos->where('estado', '!=', 'rechazado')->groupBy('tipo')
-            ->map(fn ($grupo) => (float) $grupo->sum('monto'));
-
-        $totalOtrosGastos = (float) $gastosPorTipo->sum();
-        $gastosTotales = $totalDiesel + $totalOtrosGastos;
-        $comisionOperador = $viaje->gananciaEstimada();
-        $utilidadTotal = (float) $viaje->costo_viaje - $comisionOperador - $gastosTotales;
+        $d = $liquidacion->desglose();
 
         $logoBase64 = base64_encode(file_get_contents(public_path('Logo.png')));
 
         $pdf = Pdf::loadView('liquidacion.pdf', [
-            'liquidacion'       => $liquidacion,
-            'viaje'             => $viaje,
-            'resumen'           => $resumen,
-            'dieselInicial'     => $dieselInicial,
-            'dieselSalidaMonto' => $dieselSalidaMonto,
-            'litrosSalida'      => $litrosSalida,
-            'dieselLlegadaMonto'=> $dieselLlegadaMonto,
-            'litrosLlegada'     => $litrosLlegada,
-            'costoLitro'        => $costoLitro,
-            'gastosPorTipo'     => $gastosPorTipo,
-            'totalOtrosGastos'  => $totalOtrosGastos,
-            'totalDiesel'       => $totalDiesel,
-            'gastosTotales'     => $gastosTotales,
-            'comisionOperador'  => $comisionOperador,
-            'utilidadTotal'     => $utilidadTotal,
-            'logoBase64'        => $logoBase64,
-        ])->setPaper('letter', 'portrait');
+            'liquidacion' => $liquidacion,
+            'viaje'       => $viaje,
+            'logoBase64'  => $logoBase64,
+        ] + $d)->setPaper('letter', 'portrait');
 
         return $pdf->stream("liquidacion-{$viaje->no_contrato}.pdf");
     }

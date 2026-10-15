@@ -29,6 +29,24 @@
             </div>
 
             <div>
+                <label for="tipo" class="block text-xs font-medium text-gray-400 mb-1.5">
+                    Tipo de contrato <span class="text-red-500">*</span>
+                </label>
+                <select id="tipo" name="tipo"
+                        class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('tipo') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                    @if($contrato && ! $contrato->tipo)
+                        <option value="" class="bg-gray-900" selected>Sin tipo — elige uno</option>
+                    @endif
+                    @foreach(\App\Models\Contrato::TIPOS as $value => $label)
+                        <option value="{{ $value }}" class="bg-gray-900" {{ old('tipo', $contrato ? $contrato->tipo : 'turismo') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                @error('tipo')
+                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
                 <label for="cliente_telefono" class="block text-xs font-medium text-gray-400 mb-1.5">Teléfono</label>
                 <input type="text" id="cliente_telefono" name="cliente_telefono" value="{{ old('cliente_telefono', $contrato?->cliente_telefono) }}"
                        class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('cliente_telefono') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"

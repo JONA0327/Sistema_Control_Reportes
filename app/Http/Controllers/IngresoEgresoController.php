@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contrato;
 use App\Models\IngresoEgreso;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -79,13 +80,18 @@ class IngresoEgresoController extends Controller
 
         $ingresosPorGrupo = [];
         $egresosPorGrupo = [];
+        $balancePorClasificacion = []; // [clasificacion][clave_periodo] = balance acumulado
         foreach ($movimientos as $mov) {
             $clave = $agrupador($mov->fecha);
+            $signo = $mov->tipo === 'ingreso' ? 1 : -1;
             if ($mov->tipo === 'ingreso') {
                 $ingresosPorGrupo[$clave] = ($ingresosPorGrupo[$clave] ?? 0) + (float) $mov->monto;
             } else {
                 $egresosPorGrupo[$clave] = ($egresosPorGrupo[$clave] ?? 0) + (float) $mov->monto;
             }
+
+            $clasif = $mov->clasificacion ?? 'sin_clasificar';
+            $balancePorClasificacion[$clasif][$clave] = ($balancePorClasificacion[$clasif][$clave] ?? 0) + $signo * (float) $mov->monto;
         }
 
         if ($periodo === 'todos') {
@@ -117,6 +123,14 @@ class IngresoEgresoController extends Controller
         $totalIngresos = array_sum($ingresosPorGrupo);
         $totalEgresos = array_sum($egresosPorGrupo);
 
+        $chartClasificaciones = collect($balancePorClasificacion)
+            ->map(fn ($valores, $clave) => [
+                'label' => $clave === 'sin_clasificar' ? 'Sin clasificar' : (Contrato::TIPOS[$clave] ?? ucfirst($clave)),
+                'data' => $chartKeys->map(fn ($k) => round($valores[$k] ?? 0, 2))->values(),
+            ])
+            ->sortBy('label')
+            ->values();
+
         return view('ingresos-egresos.historico', [
             'pais' => $pais,
             'periodo' => $periodo,
@@ -126,6 +140,7 @@ class IngresoEgresoController extends Controller
             'chartLabels' => $chartLabels,
             'chartIngresos' => $chartIngresos,
             'chartEgresos' => $chartEgresos,
+            'chartClasificaciones' => $chartClasificaciones,
             'categoriasEgresos' => $categoriasEgresos,
             'totalIngresos' => $totalIngresos,
             'totalEgresos' => $totalEgresos,
@@ -152,6 +167,14 @@ class IngresoEgresoController extends Controller
 
         $search = $request->get('search');
         $tipo = $request->get('tipo');
+        $categoria = $request->get('categoria');
+        $clasificacion = $request->get('clasificacion');
+
+        $categoriasDisponibles = IngresoEgreso::where('pais', $pais)
+            ->whereNotNull('categoria')
+            ->distinct()
+            ->orderBy('categoria')
+            ->pluck('categoria');
 
         $movimientos = IngresoEgreso::with('user')
             ->where('pais', $pais)
@@ -160,6 +183,10 @@ class IngresoEgresoController extends Controller
                 ->orWhere('categoria', 'like', "%{$search}%")
             )
             ->when($tipo, fn ($q) => $q->where('tipo', $tipo))
+            ->when($categoria, fn ($q) => $q->where('categoria', $categoria))
+            ->when($clasificacion, fn ($q) => $clasificacion === 'sin_clasificar'
+                ? $q->whereNull('clasificacion')
+                : $q->where('clasificacion', $clasificacion))
             ->orderByDesc('fecha')
             ->orderByDesc('id')
             ->paginate(10)
@@ -172,11 +199,46 @@ class IngresoEgresoController extends Controller
             'movimientos' => $movimientos,
             'search' => $search,
             'tipo' => $tipo,
+            'categoria' => $categoria,
+            'categoriasDisponibles' => $categoriasDisponibles,
+            'clasificacion' => $clasificacion,
+            'resumenPorClasificacion' => $this->resumenPorClasificacion($pais),
             'pais' => $pais,
             'totalIngresos' => $totalIngresos,
             'totalEgresos' => $totalEgresos,
             'balance' => $totalIngresos - $totalEgresos,
         ]);
+    }
+
+    /**
+     * Totales de ingresos/egresos/balance agrupados por clasificación
+     * (Turismo/Compras/Americano) para el país dado, incluyendo los
+     * movimientos sin clasificar (manuales, sin contrato/viaje ligado).
+     * Así se ve cuánto entró y salió por tipo de viaje sin mezclarlos.
+     */
+    private function resumenPorClasificacion(string $pais)
+    {
+        $filas = IngresoEgreso::where('pais', $pais)
+            ->selectRaw('clasificacion, tipo, SUM(monto) as total')
+            ->groupBy('clasificacion', 'tipo')
+            ->get();
+
+        $claves = $filas->pluck('clasificacion')->unique()->values();
+
+        return $claves->mapWithKeys(function ($clave) use ($filas) {
+            $delGrupo = $filas->where('clasificacion', $clave);
+            $ingresos = (float) $delGrupo->firstWhere('tipo', 'ingreso')?->total;
+            $egresos = (float) $delGrupo->firstWhere('tipo', 'egreso')?->total;
+
+            return [
+                ($clave ?? 'sin_clasificar') => [
+                    'label' => $clave ? (Contrato::TIPOS[$clave] ?? ucfirst($clave)) : 'Sin clasificar',
+                    'ingresos' => $ingresos,
+                    'egresos' => $egresos,
+                    'balance' => $ingresos - $egresos,
+                ],
+            ];
+        })->sortBy('label');
     }
 
     public function create(Request $request)
@@ -254,6 +316,7 @@ class IngresoEgresoController extends Controller
             'monto' => ['required', 'numeric', 'min:0.01'],
             'fecha' => ['required', 'date'],
             'categoria' => ['nullable', 'string', 'max:255'],
+            'clasificacion' => ['nullable', Rule::in(array_keys(Contrato::TIPOS))],
             'pais' => ['nullable', Rule::in(array_keys(\App\Models\IngresoEgreso::PAISES))],
             'comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
         ]);

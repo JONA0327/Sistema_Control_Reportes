@@ -45,4 +45,10 @@ return [
         'model' => env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
     ],
 
+    // API que consume Merlo Web (cortes de viaje). Token compartido + usuario dueño de los movimientos.
+    'merlo' => [
+        'token' => env('MERLO_API_TOKEN'),
+        'user_id' => env('MERLO_API_USER_ID'),
+    ],
+
 ];

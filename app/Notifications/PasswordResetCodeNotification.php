@@ -28,6 +28,6 @@ class PasswordResetCodeNotification extends Notification
      */
     public function toMail(object $notifiable): PasswordResetCodeMail
     {
-        return (new PasswordResetCodeMail($notifiable, $this->code))->to($notifiable->email);
+        return (new PasswordResetCodeMail($notifiable, $this->code))->to($notifiable->correo_secundario ?? $notifiable->email);
     }
 }

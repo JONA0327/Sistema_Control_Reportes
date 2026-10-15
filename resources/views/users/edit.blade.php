@@ -116,6 +116,22 @@
                             @enderror
                         </div>
 
+                        {{-- Correo secundario --}}
+                        <div class="sm:col-span-2">
+                            <label for="correo_secundario" class="block text-xs font-medium text-gray-400 mb-1.5">
+                                Correo secundario <span class="text-gray-600">(opcional)</span>
+                            </label>
+                            <input type="email" id="correo_secundario" name="correo_secundario" value="{{ old('correo_secundario', $user->correo_secundario) }}"
+                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('correo_secundario') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                                   placeholder="correo-personal@ejemplo.com"/>
+                            <p class="mt-1 text-xs text-gray-600">
+                                Correo personal del usuario, usado solo para recuperar su contraseña si el correo principal es compartido con otros operadores.
+                            </p>
+                            @error('correo_secundario')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         {{-- Rol --}}
                         <div>
                             <label for="role" class="block text-xs font-medium text-gray-400 mb-1.5">

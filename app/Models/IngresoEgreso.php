@@ -22,10 +22,12 @@ class IngresoEgreso extends Model
         'monto',
         'fecha',
         'categoria',
+        'clasificacion',
         'pais',
         'comprobante_path',
         'user_id',
         'automatico',
+        'contrato_id',
     ];
 
     protected function casts(): array
@@ -34,7 +36,26 @@ class IngresoEgreso extends Model
             'fecha' => 'date',
             'monto' => 'decimal:2',
             'automatico' => 'boolean',
+            'excluido_historico' => 'boolean',
         ];
+    }
+
+    /** Los movimientos de contratos antes del corte contable no cuentan en ningún total. */
+    protected static function booted(): void
+    {
+        static::addGlobalScope('visibles', fn ($q) => $q->where('ingresos_egresos.excluido_historico', false));
+    }
+
+    /** Contrato al que pertenece el movimiento automático de ese origen (null si no aplica). */
+    public static function contratoDeOrigen(?Model $origen): ?Contrato
+    {
+        return match (true) {
+            $origen instanceof Contrato => $origen,
+            $origen instanceof ContratoAnticipo, $origen instanceof ContratoPago,
+            $origen instanceof MerloCorte, $origen instanceof Viaje => $origen->contrato,
+            $origen instanceof DieselCarga => $origen->viaje?->contrato,
+            default => null,
+        };
     }
 
     public function user(): BelongsTo
@@ -53,7 +74,7 @@ class IngresoEgreso extends Model
      */
     public static function registrarDesdeOrigen(Model $origen, array $atributos): self
     {
-        $existente = static::where('origenable_type', $origen->getMorphClass())
+        $existente = static::withoutGlobalScopes()->where('origenable_type', $origen->getMorphClass())
             ->where('origenable_id', $origen->getKey())
             ->first();
 
@@ -63,6 +84,7 @@ class IngresoEgreso extends Model
 
         $movimiento = new static($atributos + ['automatico' => true]);
         $movimiento->origenable()->associate($origen);
+        $movimiento->excluido_historico = (bool) static::contratoDeOrigen($origen)?->es_historico;
         $movimiento->save();
 
         return $movimiento;
@@ -70,14 +92,28 @@ class IngresoEgreso extends Model
 
     public static function actualizarMontoDesdeOrigen(Model $origen, float $monto): void
     {
-        static::where('origenable_type', $origen->getMorphClass())
+        static::withoutGlobalScopes()->where('origenable_type', $origen->getMorphClass())
             ->where('origenable_id', $origen->getKey())
             ->update(['monto' => $monto]);
     }
 
+    public static function actualizarClasificacionDesdeOrigen(Model $origen, ?string $clasificacion, string $pais): void
+    {
+        static::withoutGlobalScopes()->where('origenable_type', $origen->getMorphClass())
+            ->where('origenable_id', $origen->getKey())
+            ->update(['clasificacion' => $clasificacion, 'pais' => $pais]);
+    }
+
+    public static function actualizarTipoDesdeOrigen(Model $origen, string $tipo): void
+    {
+        static::withoutGlobalScopes()->where('origenable_type', $origen->getMorphClass())
+            ->where('origenable_id', $origen->getKey())
+            ->update(['tipo' => $tipo]);
+    }
+
     public static function eliminarDesdeOrigen(Model $origen): void
     {
-        static::where('origenable_type', $origen->getMorphClass())
+        static::withoutGlobalScopes()->where('origenable_type', $origen->getMorphClass())
             ->where('origenable_id', $origen->getKey())
             ->delete();
     }

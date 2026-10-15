@@ -33,6 +33,11 @@ class BackfillIngresosEgresos extends Command
 
         Contrato::with('pagos')->chunkById(50, function ($contratos) use (&$creados) {
             foreach ($contratos as $contrato) {
+                // Compras: sus movimientos son egreso y entran al cerrar el viaje.
+                if ($contrato->es_compras) {
+                    continue;
+                }
+
                 if ($contrato->esta_liquidado) {
                     $antes = IngresoEgreso::count();
                     IngresoEgreso::registrarDesdeOrigen($contrato, [

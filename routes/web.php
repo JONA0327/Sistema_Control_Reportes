@@ -4,6 +4,7 @@ use App\Http\Controllers\AnticipoController;
 use App\Http\Controllers\BusController;
 use App\Http\Controllers\ContratoController;
 use App\Http\Controllers\ContratoHistoricoController;
+use App\Http\Controllers\ContratoHistoricoSistemaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DieselCargaController;
 use App\Http\Controllers\IngresoEgresoController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ViajeCierreController;
 use App\Http\Controllers\ViajeController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,6 +63,11 @@ Route::middleware('auth')->group(function () {
         ->middlewareFor('destroy', 'can:viajes.eliminar');
     Route::get('viajes', [ViajeController::class, 'index'])->name('viajes.index')->middleware('can:viajes.ver');
 
+    Route::middleware('can:egresos_ingresos.crear')->group(function () {
+        Route::get('viajes/{viaje}/cierre', [ViajeCierreController::class, 'show'])->name('viajes.cierre');
+        Route::post('viajes/{viaje}/cierre', [ViajeCierreController::class, 'store'])->name('viajes.cierre.store');
+    });
+
     Route::get('ingresos-egresos/historico', [IngresoEgresoController::class, 'historico'])
         ->name('ingresos-egresos.historico')->middleware('can:egresos_ingresos.ver');
     Route::resource('ingresos-egresos', IngresoEgresoController::class)->parameters(['ingresos-egresos' => 'movimiento'])->except(['show'])
@@ -89,6 +96,13 @@ Route::middleware('auth')->group(function () {
         ->middlewareFor(['create', 'store'], 'can:contratos.crear')
         ->middlewareFor(['edit', 'update'], 'can:contratos.editar')
         ->middlewareFor('destroy', 'can:contratos.eliminar');
+    Route::middleware('can:contratos_historicos.ver')->group(function () {
+        Route::get('historico-sistema', [ContratoHistoricoSistemaController::class, 'index'])->name('contratos-historicos.sistema');
+        Route::get('historico-sistema/{contrato}', [ContratoHistoricoSistemaController::class, 'show'])->name('contratos-historicos.sistema.show');
+    });
+    Route::post('historico-sistema/corte', [ContratoHistoricoSistemaController::class, 'updateCorte'])->name('contratos-historicos.sistema.corte')->middleware('role:superadmin');
+    Route::post('historico-sistema/{contrato}/movimientos', [ContratoHistoricoSistemaController::class, 'storeMovimiento'])->name('contratos-historicos.sistema.movimientos.store')->middleware('can:egresos_ingresos.crear');
+    Route::delete('historico-sistema/movimientos/{movimiento}', [ContratoHistoricoSistemaController::class, 'destroyMovimiento'])->name('contratos-historicos.sistema.movimientos.destroy')->middleware('can:egresos_ingresos.eliminar');
     Route::resource('contratos-historicos', ContratoHistoricoController::class)->parameters(['contratos-historicos' => 'contrato'])->except(['show', 'create'])
         ->middlewareFor('index', 'can:contratos_historicos.ver')
         ->middlewareFor('update', 'can:contratos_historicos.editar')

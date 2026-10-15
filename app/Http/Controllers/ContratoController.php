@@ -8,29 +8,25 @@ use App\Models\ContratoPago;
 use App\Models\IngresoEgreso;
 use App\Models\Movimiento;
 use App\Models\Viaje;
-use App\Services\GroqAiService;
 use App\Support\MoneyNormalizer;
 use App\Support\PdfPaperSize;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ContratoController extends Controller
 {
-    public function __construct(private readonly GroqAiService $groqAi)
-    {
-    }
-
     public function index(Request $request)
     {
         $search = $request->get('search');
 
-        $contratos = Contrato::with(['bus', 'pagos'])
-            ->when($search, fn ($q) => $q
+        $contratos = Contrato::noHistoricos()->with(['bus', 'pagos'])
+            ->when($search, fn ($q) => $q->where(fn ($w) => $w
                 ->where('cliente_nombre', 'like', "%{$search}%")
                 ->orWhere('salida', 'like', "%{$search}%")
                 ->orWhere('destino', 'like', "%{$search}%")
                 ->orWhere('id', 'like', "%{$search}%")
-            )
+            ))
             ->orderByDesc('id')
             ->paginate(10)
             ->withQueryString();
@@ -99,7 +95,14 @@ class ContratoController extends Controller
         $data = $this->validated($request, isUpdate: true);
         $data['incluye_estacionamiento'] = $request->boolean('incluye_estacionamiento', false);
 
+        $tipoAnterior = $contrato->tipo;
         $contrato->update($data);
+
+        // Clasificar (o reclasificar) un contrato corrige sus movimientos ya registrados, aunque el viaje esté cerrado.
+        if ($tipoAnterior !== $contrato->tipo) {
+            $contrato->resincronizarMovimientos();
+        }
+
         $this->syncAnticipoIngreso($contrato);
         $this->syncViajePendiente($contrato);
 
@@ -151,15 +154,19 @@ class ContratoController extends Controller
 
         $pago = $contrato->pagos()->create($data + ['user_id' => $request->user()->id]);
 
-        IngresoEgreso::registrarDesdeOrigen($pago, [
-            'tipo' => 'ingreso',
+        // Compras: el abono es egreso y entra al cierre del viaje.
+        if (! $contrato->retiene_movimientos) {
+            IngresoEgreso::registrarDesdeOrigen($pago, [
+            'tipo' => $contrato->tipo_movimiento,
             'concepto' => "Abono contrato {$contrato->folio} - {$contrato->cliente_nombre}",
             'monto' => $pago->monto,
             'fecha' => $pago->fecha_pago,
-            'categoria' => 'Contratos',
-            'pais' => $this->groqAi->determinarPais($contrato->destino),
+            'categoria' => 'Abono',
+            'clasificacion' => $contrato->tipo,
+            'pais' => $contrato->pais_ingreso,
             'user_id' => $request->user()->id,
-        ]);
+            ]);
+        }
 
         return back()->with('success', 'Abono registrado correctamente.');
     }
@@ -177,19 +184,32 @@ class ContratoController extends Controller
      */
     private function syncAnticipoIngreso(Contrato $contrato): void
     {
+        // Con anticipos formales, ellos ya generan su propio movimiento: la columna legacy
+        // `anticipo` no debe sumar otro (antes, editar un contrato duplicaba el anticipo).
+        if ($contrato->anticipos()->whereNull('cancelado_at')->exists()) {
+            IngresoEgreso::eliminarDesdeOrigen($contrato);
+
+            return;
+        }
+
         if ($contrato->anticipo <= 0) {
             IngresoEgreso::eliminarDesdeOrigen($contrato);
 
             return;
         }
 
+        if ($contrato->retiene_movimientos) {
+            return;
+        }
+
         IngresoEgreso::registrarDesdeOrigen($contrato, [
-            'tipo' => 'ingreso',
+            'tipo' => $contrato->tipo_movimiento,
             'concepto' => "Anticipo contrato {$contrato->folio} - {$contrato->cliente_nombre}",
             'monto' => $contrato->anticipo,
             'fecha' => $contrato->fecha_firma,
-            'categoria' => 'Contratos',
-            'pais' => $this->groqAi->determinarPais($contrato->destino),
+            'categoria' => 'Anticipo',
+            'clasificacion' => $contrato->tipo,
+            'pais' => $contrato->pais_ingreso,
             'user_id' => $contrato->user_id,
         ]);
 
@@ -267,6 +287,7 @@ class ContratoController extends Controller
     {
         $data = $request->validate([
             'cliente_nombre' => ['required', 'string', 'max:255'],
+            'tipo' => ['required', Rule::in(array_keys(Contrato::TIPOS))],
             'cliente_telefono' => ['nullable', 'string', 'max:50'],
             'cliente_domicilio' => ['nullable', 'string', 'max:255'],
             'cliente_ciudad' => ['nullable', 'string', 'max:255'],

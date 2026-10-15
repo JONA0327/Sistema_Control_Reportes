@@ -35,7 +35,7 @@
                     <tr>
                         <td style="padding:0 32px 32px 32px;">
                             <p style="margin:0; font-size:13px; line-height:1.6; color:#8a7a7c;">
-                                Este código vence en <strong>15 minutos</strong> y solo es válido para la cuenta registrada con <strong>{{ $user->email }}</strong>. Si tú no solicitaste este cambio, puedes ignorar este correo; tu contraseña actual seguirá funcionando.
+                                Este código vence en <strong>15 minutos</strong> y solo es válido para el usuario <strong>{{ $user->username }}</strong>. Si tú no solicitaste este cambio, puedes ignorar este correo; tu contraseña actual seguirá funcionando.
                             </p>
                         </td>
                     </tr>

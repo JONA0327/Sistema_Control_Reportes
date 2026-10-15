@@ -20,15 +20,16 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
             line-height: 1.3;
         }
 
-        .header-table { width: 100%; margin-bottom: 8px; }
+        .header-table { width: 100%; margin-bottom: 8px; table-layout: fixed; }
         .header-table td { vertical-align: middle; }
-        .brand-logo { width: 210px; }
+        .brand-logo { width: 260px; }
         .header-center { text-align: center; }
-        .header-right { width: 210px; }
+        .header-right { width: 260px; text-align: center; }
         .header-right table { width: 100%; border-collapse: collapse; }
         .header-right td { text-align: center; padding: 0; }
         .autobus-img { width: 110px; }
         .folio-box {
+            display: inline-block;
             margin-top: 5px;
             border: 1.5px solid #b91c1c;
             border-radius: 4px;
@@ -77,6 +78,22 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
             background-color: #f9fafb;
         }
         .box .label { color: #6b7280; font-size: 8.5px; text-transform: uppercase; display: block; margin-bottom: 2px; }
+
+        .trip-box { border: 0.75px solid #d1d5db; border-radius: 4px; padding: 6px 10px; background-color: #f9fafb; text-align: center; }
+        .trip-box-title {
+            display: block;
+            font-size: 9px;
+            font-weight: bold;
+            color: #b91c1c;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 0.75px solid #e5e7eb;
+            padding-bottom: 3px;
+            margin-bottom: 3px;
+        }
+        .trip-row { margin-top: 2px; }
+        .trip-row .label { color: #6b7280; font-size: 8.5px; text-transform: uppercase; }
+        .trip-row .value { color: #1f2933; font-weight: bold; font-size: 10px; margin-left: 3px; }
         .highlight-note {
             display: block;
             margin-top: 4px;
@@ -98,7 +115,7 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
         .costos-table .label { display: block; font-size: 8.5px; color: #6b7280; text-transform: uppercase; margin-bottom: 2px; }
         .costos-table .value { font-size: 12px; font-weight: bold; }
 
-        .clausulas { margin: 5px 0; padding-left: 16px; font-size: 8.3px; color: #374151; }
+        .clausulas { margin: 5px 0; padding-left: 16px; font-size: 8.3px; color: #374151; text-align: center; }
         .clausulas li { margin-bottom: 2px; }
         .clausulas .clausula-highlight { background-color: #fef08a; font-weight: bold; padding: 1px 3px; }
 
@@ -125,24 +142,24 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
     {{-- Encabezado --}}
     <table class="header-table">
         <tr>
-            <td style="width: 210px;">
+            <td style="width: 260px;">
                 <img src="data:image/png;base64,{{ $logoBase64 }}" class="brand-logo">
             </td>
             <td class="header-center">
                 <span class="doc-title-inline">Contrato de arrendamiento</span>
             </td>
-            <td class="header-right">
-                <table>
-                    <tr><td><img src="data:image/png;base64,{{ $autobusBase64 }}" class="autobus-img"></td></tr>
-                    <tr>
-                        <td>
-                            <div class="folio-box">
-                                <div class="folio-label">No. Folio</div>
-                                <div class="folio-value">{{ $contrato->folio }}</div>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+            <td class="header-right" style="width: 260px;">
+                <img src="data:image/png;base64,{{ $autobusBase64 }}" class="autobus-img">
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td class="header-right" style="padding-top: 4px;">
+                <div class="folio-box">
+                    <div class="folio-label">No. Folio</div>
+                    <div class="folio-value">{{ $contrato->folio }}</div>
+                </div>
             </td>
         </tr>
     </table>
@@ -189,33 +206,33 @@ $fechaLarga = fn ($fecha) => $fecha->format('j').' de '.ucfirst($mesesEs[(int) $
     <h2 class="section-title">Datos del viaje</h2>
     <table class="data-grid">
         <tr>
-            <td style="width: 32%;">
-                <span class="label">Fecha de salida</span>
-                <span class="value" style="white-space:nowrap;">{{ $fechaLarga($contrato->fecha_salida) }}</span>
+            <td style="width: 50%; padding-right: 10px;">
+                <div class="trip-box">
+                    <span class="trip-box-title">Salida</span>
+                    <div class="trip-row"><span class="label">Fecha:</span><span class="value">{{ $fechaLarga($contrato->fecha_salida) }}</span></div>
+                    <div class="trip-row"><span class="label">Hora:</span><span class="value">{{ $contrato->hora_salida ?: '—' }} hrs</span></div>
+                </div>
             </td>
-            <td style="width: 18%;">
-                <span class="label">Hora de salida</span>
-                <span class="value">{{ $contrato->hora_salida ?: '—' }} hrs</span>
-            </td>
-            <td style="width: 32%;">
-                <span class="label">Fecha de regreso</span>
-                <span class="value" style="white-space:nowrap;">{{ $fechaLarga($contrato->fecha_regreso) }}</span>
-            </td>
-            <td style="width: 18%;">
-                <span class="label">Hora de regreso</span>
-                <span class="value">{{ $contrato->hora_regreso ?: '—' }} hrs</span>
+            <td style="width: 50%;">
+                <div class="trip-box">
+                    <span class="trip-box-title">Regreso</span>
+                    <div class="trip-row"><span class="label">Fecha:</span><span class="value">{{ $fechaLarga($contrato->fecha_regreso) }}</span></div>
+                    <div class="trip-row"><span class="label">Hora:</span><span class="value">{{ $contrato->hora_regreso ?: '—' }} hrs</span></div>
+                </div>
             </td>
         </tr>
     </table>
     <table class="data-grid">
         <tr>
-            <td style="width: 50%;">
-                <span class="label">Salida y destino</span>
-                <span class="value">{{ $contrato->salida_destino }}</span>
+            <td style="width: 50%; padding-right: 10px;">
+                <div class="trip-box">
+                    <div class="trip-row"><span class="label">Salida y destino:</span><span class="value">{{ $contrato->salida_destino }}</span></div>
+                </div>
             </td>
             <td style="width: 50%;">
-                <span class="label">Punto de partida y llegada</span>
-                <span class="value">{{ $contrato->punto_partida_llegada ?: '—' }}</span>
+                <div class="trip-box">
+                    <div class="trip-row"><span class="label">Punto de partida y llegada:</span><span class="value">{{ $contrato->punto_partida_llegada ?: '—' }}</span></div>
+                </div>
             </td>
         </tr>
     </table>

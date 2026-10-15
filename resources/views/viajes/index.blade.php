@@ -123,6 +123,13 @@
                                     </svg>
                                 </a>
                                 @endunless
+                                @can('egresos_ingresos.crear')
+                                @if($viaje->contrato && ! $viaje->esta_pendiente)
+                                <a href="{{ route('viajes.cierre', $viaje) }}"
+                                   class="px-2.5 py-1.5 rounded-lg text-xs font-medium {{ $viaje->cerrado_at ? 'text-emerald-400 bg-emerald-500/10' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700' }} transition-all"
+                                   title="{{ $viaje->es_compras ? 'Cierre de viaje' : 'Resultado del viaje' }}">{{ $viaje->es_compras ? ($viaje->cerrado_at ? 'Cerrado' : 'Cierre') : 'Resultado' }}</a>
+                                @endif
+                                @endcan
                                 <a href="{{ route('viajes.edit', $viaje) }}"
                                    class="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-gray-700 transition-all"
                                    title="Editar">

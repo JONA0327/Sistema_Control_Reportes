@@ -17,6 +17,7 @@
                 <h1 class="text-2xl font-bold text-white">Contratos históricos</h1>
                 <p class="text-sm text-gray-500 mt-0.5">Control de contratos anteriores al sistema, capturados manualmente con su documento anexo.</p>
             </div>
+            <a href="{{ route('contratos-historicos.sistema') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-700/60 hover:bg-gray-700 text-gray-200 text-sm font-medium transition-colors">Contratos del sistema (corte)</a>
             <button type="button" @click="mostrarForm = ! mostrarForm"
                     class="brand-gradient inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg shadow-red-950/40 hover:opacity-90 transition-opacity">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

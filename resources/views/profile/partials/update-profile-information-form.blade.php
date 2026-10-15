@@ -47,6 +47,15 @@
             @endif
         </div>
 
+        <div>
+            <x-input-label for="correo_secundario" :value="__('Correo secundario (opcional)')" />
+            <x-text-input id="correo_secundario" name="correo_secundario" type="email" class="mt-1 block w-full" :value="old('correo_secundario', $user->correo_secundario)" autocomplete="off" />
+            <p class="mt-1 text-xs text-gray-500">
+                {{ __('Correo personal donde recibirás el código para recuperar tu contraseña, en caso de que tu correo principal sea compartido con otros operadores.') }}
+            </p>
+            <x-input-error class="mt-2" :messages="$errors->get('correo_secundario')" />
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

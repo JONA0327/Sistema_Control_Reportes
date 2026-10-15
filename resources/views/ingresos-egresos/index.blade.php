@@ -69,6 +69,31 @@
         </div>
     </div>
 
+    {{-- Resumen separado por clasificación (Turismo / Compras / Americano) --}}
+    @if($resumenPorClasificacion->isNotEmpty())
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            @foreach($resumenPorClasificacion as $clave => $datos)
+                <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl p-5">
+                    <p class="text-xs font-semibold text-white uppercase tracking-wider mb-3">{{ $datos['label'] }}</p>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase">Ingresos</p>
+                            <p class="text-sm font-bold text-green-400">${{ number_format($datos['ingresos'], 2) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase">Egresos</p>
+                            <p class="text-sm font-bold text-red-400">${{ number_format($datos['egresos'], 2) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase">Balance</p>
+                            <p class="text-sm font-bold {{ $datos['balance'] >= 0 ? 'text-white' : 'text-red-400' }}">${{ number_format($datos['balance'], 2) }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     {{-- Tarjeta principal --}}
     <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl overflow-hidden">
 
@@ -91,12 +116,26 @@
                     <option value="ingreso" class="bg-gray-900" {{ $tipo === 'ingreso' ? 'selected' : '' }}>Ingresos</option>
                     <option value="egreso" class="bg-gray-900" {{ $tipo === 'egreso' ? 'selected' : '' }}>Egresos</option>
                 </select>
+                <select name="categoria" onchange="this.form.submit()"
+                        class="px-3 py-2 bg-gray-900/80 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                    <option value="" class="bg-gray-900">Todas las categorías</option>
+                    @foreach($categoriasDisponibles as $cat)
+                        <option value="{{ $cat }}" class="bg-gray-900" {{ $categoria === $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                    @endforeach
+                </select>
+                <select name="clasificacion" onchange="this.form.submit()"
+                        class="px-3 py-2 bg-gray-900/80 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                    <option value="" class="bg-gray-900">Todas las clasificaciones</option>
+                    @foreach($resumenPorClasificacion as $clave => $datos)
+                        <option value="{{ $clave }}" class="bg-gray-900" {{ $clasificacion === $clave ? 'selected' : '' }}>{{ $datos['label'] }}</option>
+                    @endforeach
+                </select>
                 <input type="hidden" name="pais" value="{{ $pais }}"/>
                 <button type="submit"
                         class="px-4 py-2 bg-gray-700/60 border border-gray-600/40 text-gray-300 text-sm rounded-xl hover:bg-gray-700 transition-colors">
                     Buscar
                 </button>
-                @if($search || $tipo)
+                @if($search || $tipo || $categoria || $clasificacion)
                     <a href="{{ route('ingresos-egresos.index', ['pais' => $pais]) }}"
                        class="px-4 py-2 bg-gray-700/30 border border-gray-600/30 text-gray-500 text-sm rounded-xl hover:text-gray-300 transition-colors">
                         Limpiar
@@ -147,7 +186,14 @@
                             </div>
                         </td>
                         <td class="px-5 py-3 hidden md:table-cell">
-                            <span class="text-sm text-gray-400">{{ $movimiento->categoria ?: '—' }}</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-sm text-gray-400">{{ $movimiento->categoria ?: '—' }}</span>
+                                @if($movimiento->clasificacion)
+                                    <span class="text-xs px-1.5 py-0.5 rounded border border-gray-700 text-gray-500">
+                                        {{ \App\Models\Contrato::TIPOS[$movimiento->clasificacion] ?? ucfirst($movimiento->clasificacion) }}
+                                    </span>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-5 py-3 hidden lg:table-cell">
                             <span class="text-sm text-gray-400">{{ $movimiento->user?->name }}</span>

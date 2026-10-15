@@ -90,6 +90,24 @@
                 @enderror
             </div>
 
+            {{-- Clasificación --}}
+            <div>
+                <label for="clasificacion" class="block text-xs font-medium text-gray-400 mb-1.5">
+                    Clasificación
+                    <span class="text-xs text-gray-600 font-normal">(opcional, tipo de viaje al que pertenece)</span>
+                </label>
+                <select id="clasificacion" name="clasificacion"
+                        class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('clasificacion') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
+                    <option value="" class="bg-gray-900">— Sin clasificar —</option>
+                    @foreach(\App\Models\Contrato::TIPOS as $valor => $etiqueta)
+                        <option value="{{ $valor }}" class="bg-gray-900" {{ old('clasificacion', $movimiento?->clasificacion) === $valor ? 'selected' : '' }}>{{ $etiqueta }}</option>
+                    @endforeach
+                </select>
+                @error('clasificacion')
+                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
             {{-- País --}}
             <div>
                 <label for="pais" class="block text-xs font-medium text-gray-400 mb-1.5">

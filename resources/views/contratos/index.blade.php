@@ -73,6 +73,7 @@
                     <tr class="border-b border-gray-700/40">
                         <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Folio</th>
                         <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Cliente</th>
+                        <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3 hidden sm:table-cell">Tipo</th>
                         <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3 hidden md:table-cell">Destino</th>
                         <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3 hidden lg:table-cell">Salida</th>
                         <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Costo</th>
@@ -88,6 +89,19 @@
                         </td>
                         <td class="px-5 py-3">
                             <span class="text-sm text-white truncate">{{ $contrato->cliente_nombre }}</span>
+                        </td>
+                        <td class="px-5 py-3 hidden sm:table-cell">
+                            @php
+                                $tipoBadge = match($contrato->tipo) {
+                                    'americano' => 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+                                    'compras' => 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+                                    null, '' => 'bg-gray-500/10 text-gray-400 border-gray-500/30',
+                                    default => 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                                };
+                            @endphp
+                            <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-lg font-medium border {{ $tipoBadge }}">
+                                {{ $contrato->tipo_label }}
+                            </span>
                         </td>
                         <td class="px-5 py-3 hidden md:table-cell">
                             <span class="text-sm text-gray-400 truncate">{{ $contrato->salida_destino }}</span>
@@ -166,7 +180,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-16 text-center">
+                        <td colspan="8" class="px-5 py-16 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-12 h-12 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center">
                                     <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -22,11 +22,13 @@ class ViajeController extends Controller
         $search = $request->get('search');
 
         $viajes = Viaje::with(['bus', 'operador', 'liquidacion', 'contrato'])
-            ->when($search, fn($q) => $q
+            ->where(fn ($q) => $q->whereNull('contrato_id')
+                ->orWhereHas('contrato', fn ($c) => $c->noHistoricos()))
+            ->when($search, fn($q) => $q->where(fn ($w) => $w
                 ->where('no_contrato', 'like', "%{$search}%")
                 ->orWhere('origen', 'like', "%{$search}%")
                 ->orWhere('destino', 'like', "%{$search}%")
-            )
+            ))
             ->orderByDesc('fecha_salida')
             ->paginate(10)
             ->withQueryString();
@@ -75,14 +77,17 @@ class ViajeController extends Controller
             $dieselInicial->registrarEgresoAutomatico($request->user()->id);
         }
 
-        if ($viaje->gastos_entregados > 0) {
+        if ($viaje->retiene_movimientos) {
+            // Compras sin cerrar: se registra en el cierre del viaje.
+        } elseif ($viaje->gastos_entregados > 0) {
             IngresoEgreso::registrarDesdeOrigen($viaje, [
                 'tipo' => 'egreso',
                 'concepto' => "Gastos entregados - Viaje {$viaje->no_contrato}",
                 'monto' => $viaje->gastos_entregados,
                 'fecha' => $viaje->fecha_salida,
                 'categoria' => 'Gastos de operador',
-                'pais' => $this->groqAi->determinarPais($viaje->destino),
+                'clasificacion' => $viaje->contrato?->tipo,
+                'pais' => $viaje->contrato?->pais_ingreso ?? $this->groqAi->determinarPais($viaje->destino),
                 'user_id' => $request->user()->id,
             ]);
             IngresoEgreso::actualizarMontoDesdeOrigen($viaje, (float) $viaje->gastos_entregados);

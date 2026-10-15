@@ -102,6 +102,46 @@ class Liquidacion extends Model
         return max(0, -$this->saldo());
     }
 
+    /**
+     * Desglose completo de la liquidación (diésel, otros gastos, resumen
+     * financiero). Lo usan la hoja de liquidación (PDF) y el cierre de viaje.
+     */
+    public function desglose(): array
+    {
+        $viaje = $this->viaje;
+        $resumen = $this->resumen();
+
+        $dieselInicial = $viaje->dieselCargas()->where('tipo', 'inicial')->first();
+        $dieselExtras = $viaje->dieselCargas()->where('tipo', 'extra')->where('estado_solicitud', 'aprobada')->get();
+
+        // El diésel "de salida" es el que entrega administración antes del viaje;
+        // el "extra" es el que el operador va registrando en el camino, y en la
+        // práctica es el diésel de regreso (puede haber más de un registro extra,
+        // no solo el de salida, y aquí se suman todos).
+        $dieselSalidaMonto = (float) ($dieselInicial->monto ?? $viaje->gasto_diesel_inicio);
+        $litrosSalida = (float) ($dieselInicial->litros ?? $viaje->litros_diesel_inicio ?? 0);
+
+        $dieselLlegadaMonto = (float) $dieselExtras->sum('monto');
+        $litrosLlegada = (float) $dieselExtras->sum('litros');
+
+        $totalDiesel = $dieselSalidaMonto + $dieselLlegadaMonto;
+        $totalLitrosDiesel = $litrosSalida + $litrosLlegada;
+        $costoLitro = $totalLitrosDiesel > 0 ? $totalDiesel / $totalLitrosDiesel : null;
+
+        $gastosPorTipo = $this->gastos()->where('estado', '!=', 'rechazado')->get()->groupBy('tipo')
+            ->map(fn ($grupo) => (float) $grupo->sum('monto'));
+
+        $totalOtrosGastos = (float) $gastosPorTipo->sum();
+        $gastosTotales = $totalDiesel + $totalOtrosGastos;
+        $comisionOperador = $viaje->gananciaEstimada();
+        $utilidadTotal = (float) $viaje->costo_viaje - $comisionOperador - $gastosTotales;
+
+        return compact(
+            'resumen', 'dieselInicial', 'dieselSalidaMonto', 'litrosSalida', 'dieselLlegadaMonto', 'litrosLlegada',
+            'costoLitro', 'gastosPorTipo', 'totalOtrosGastos', 'totalDiesel', 'gastosTotales', 'comisionOperador', 'utilidadTotal'
+        );
+    }
+
     public function resumen(): array
     {
         return [

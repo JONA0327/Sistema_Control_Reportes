@@ -25,6 +25,7 @@ class User extends Authenticatable
         'username',
         'carnet',
         'email',
+        'correo_secundario',
         'photo',
         'password',
         'is_active',

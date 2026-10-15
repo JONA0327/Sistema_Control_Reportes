@@ -30,23 +30,29 @@ class PasswordResetLinkController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'username' => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $request->string('email')->toString())->first();
+        $user = User::where('username', $request->string('username')->toString())->first();
 
         if (! $user) {
             return back()->withInput()->withErrors([
-                'email' => 'No encontramos una cuenta con ese correo electrónico.',
+                'username' => 'No encontramos una cuenta con ese usuario.',
             ]);
         }
 
-        PasswordResetCode::where('email', $user->email)->delete();
+        if (! $user->correo_secundario) {
+            return back()->withInput()->withErrors([
+                'username' => 'Esta cuenta no tiene un correo secundario registrado para recuperar la contraseña. Contacta a un administrador.',
+            ]);
+        }
+
+        PasswordResetCode::where('user_id', $user->id)->delete();
 
         $code = (string) random_int(100000, 999999);
         $resetCode = PasswordResetCode::create([
             'user_id' => $user->id,
-            'email' => $user->email,
+            'email' => $user->correo_secundario,
             'code_hash' => Hash::make($code),
             'expires_at' => now()->addMinutes(15),
         ]);
@@ -54,20 +60,20 @@ class PasswordResetLinkController extends Controller
         $user->notify(new PasswordResetCodeNotification($code));
 
         return back()->with([
-            'status' => 'Te enviamos un código de seguridad a tu correo electrónico.',
+            'status' => 'Te enviamos un código de seguridad a tu correo secundario.',
             'code_sent' => true,
-            'reset_email' => $user->email,
+            'reset_username' => $user->username,
         ]);
     }
 
     public function verify(Request $request): RedirectResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'username' => ['required', 'string'],
             'code' => ['required', 'digits:6'],
         ]);
 
-        $resetCode = PasswordResetCode::where('email', $request->string('email')->toString())
+        $resetCode = PasswordResetCode::whereHas('user', fn ($q) => $q->where('username', $request->string('username')->toString()))
             ->whereNull('used_at')
             ->latest()
             ->first();

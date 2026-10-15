@@ -94,6 +94,23 @@
         @endif
     </div>
 
+    {{-- Gráfica: balance por clasificación (líneas) --}}
+    @if($chartClasificaciones->isNotEmpty())
+        <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl p-5 mb-5">
+            <h2 class="text-sm font-semibold text-white mb-1">Balance por clasificación</h2>
+            <p class="text-xs text-gray-600 mb-4">Turismo, Compras y Americano por separado, para no mezclarlos</p>
+            @if($movimientosCount > 0)
+                <div style="height: 300px;">
+                    <canvas id="chart-clasificaciones"></canvas>
+                </div>
+            @else
+                <div class="py-16 text-center">
+                    <p class="text-sm text-gray-500">No hay movimientos registrados en este periodo.</p>
+                </div>
+            @endif
+        </div>
+    @endif
+
     {{-- Gráfica: egresos por categoría --}}
     @if($categoriasEgresos->isNotEmpty())
         <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl p-5">
@@ -112,6 +129,7 @@
     const labels = @json($chartLabels);
     const ingresos = @json($chartIngresos);
     const egresos = @json($chartEgresos);
+    const clasificaciones = @json($chartClasificaciones);
     const categoriaLabels = @json($categoriasEgresos->keys());
     const categoriaValores = @json($categoriasEgresos->values());
 
@@ -145,6 +163,42 @@
                 },
                 plugins: {
                     legend: { position: 'top', align: 'start', labels: { color: '#e5e7eb', usePointStyle: true, pointStyle: 'rect', boxWidth: 10, boxHeight: 10, padding: 16 } },
+                    tooltip: {
+                        backgroundColor: '#111827', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+                        titleColor: '#f9fafb', bodyColor: '#e5e7eb', padding: 10,
+                        callbacks: { label: (ctx) => ctx.dataset.label + ': ' + moneda(ctx.parsed.y) },
+                    },
+                },
+            },
+        });
+    }
+
+    const clasificacionesCanvas = document.getElementById('chart-clasificaciones');
+    if (clasificacionesCanvas) {
+        new Chart(clasificacionesCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: clasificaciones.map((serie, i) => ({
+                    label: serie.label,
+                    data: serie.data,
+                    borderColor: categoricos[i % categoricos.length],
+                    backgroundColor: categoricos[i % categoricos.length],
+                    tension: 0.3,
+                    pointRadius: 3,
+                    fill: false,
+                })),
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 10 } } },
+                    y: { grid: { color: gridColor }, border: { display: false }, ticks: { color: tickColor, callback: (v) => moneda(v) } },
+                },
+                plugins: {
+                    legend: { position: 'top', align: 'start', labels: { color: '#e5e7eb', usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8, padding: 16 } },
                     tooltip: {
                         backgroundColor: '#111827', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
                         titleColor: '#f9fafb', bodyColor: '#e5e7eb', padding: 10,
