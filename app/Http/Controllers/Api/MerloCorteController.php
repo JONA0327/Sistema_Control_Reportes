@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Contrato;
 use App\Models\MerloCorte;
 use App\Models\MerloCortePaqueteria;
+use App\Models\MerloPaqueteriaEgreso;
+use App\Models\IngresoEgreso;
 use App\Models\Viaje;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,6 +23,10 @@ class MerloCorteController extends Controller
             'fecha' => ['required', 'date'],
             'payments_count' => ['required', 'integer', 'min:0'],
             'total_amount' => ['required', 'numeric', 'min:0'],
+            'expenses' => ['nullable', 'array'],
+            'expenses.*.id' => ['required', 'integer'],
+            'expenses.*.concept' => ['required', 'string', 'max:255'],
+            'expenses.*.amount' => ['required', 'numeric', 'min:0.01'],
         ]);
 
         $userId = (int) config('services.merlo.user_id');
@@ -28,9 +34,24 @@ class MerloCorteController extends Controller
             return response()->json(['message' => 'Falta MERLO_API_USER_ID en .env de Control.'], 500);
         }
 
-        $corte = DB::transaction(function () use ($d, $userId) {
+        $gastos = $d['expenses'] ?? [];
+        unset($d['expenses']);
+
+        $corte = DB::transaction(function () use ($d, $gastos, $userId) {
             $corte = MerloCortePaqueteria::updateOrCreate(['fecha' => $d['fecha']], $d);
             $corte->registrarIngreso($userId);
+
+            // Egresos del día: se sincronizan con lo que mandó Merlo (alta, cambio o baja).
+            foreach ($gastos as $g) {
+                MerloPaqueteriaEgreso::updateOrCreate(
+                    ['merlo_id' => $g['id']],
+                    ['fecha' => $d['fecha'], 'concepto' => $g['concept'], 'monto' => $g['amount']],
+                )->registrarEgreso($userId);
+            }
+            MerloPaqueteriaEgreso::whereDate('fecha', $d['fecha'])->whereNotIn('merlo_id', collect($gastos)->pluck('id'))->get()->each(function ($e) {
+                IngresoEgreso::eliminarDesdeOrigen($e);
+                $e->delete();
+            });
 
             return $corte;
         });
