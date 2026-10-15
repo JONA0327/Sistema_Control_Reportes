@@ -70,7 +70,7 @@
             @forelse($cortes as $c)
                 <div class="py-2 border-b border-gray-700/40 text-sm">
                     <div class="flex justify-between"><span class="text-gray-300">{{ $c->ruta }} · {{ $c->fecha->format('d/m/Y') }}</span><span class="text-gray-200">{{ $money($c->monto) }}</span></div>
-                    <p class="text-xs text-gray-500 mt-0.5">{{ $c->sold_seats }} vendidos ({{ $c->late_sold_seats }} después) · {{ $c->free_seats }} sobraron de {{ $c->total_seats }} · ventas {{ $money($c->sold_amount) }} + abonos {{ $money($c->abonos_amount) }} + fuera del sistema {{ $money($c->external_amount) }} ({{ $c->external_seats }} asientos)</p>
+                    <p class="text-xs text-gray-500 mt-0.5">{{ $c->sold_seats }} vendidos ({{ $c->late_sold_seats }} después) · {{ $c->free_seats }} sobraron de {{ $c->total_seats }} · vendido {{ $money($c->sold_amount) }} (abonos ya recibidos {{ $money($c->abonos_amount) }}) + vendido sin apartar en guía {{ $money($c->external_amount) }} ({{ $c->external_seats }} asientos)</p>
                 </div>
             @empty
                 <p class="text-sm text-gray-500">Merlo aún no envía el corte de este viaje.</p>

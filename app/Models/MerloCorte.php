@@ -19,10 +19,10 @@ class MerloCorte extends Model
         return $this->belongsTo(Contrato::class);
     }
 
-    /** Ventas + abonos + lo cobrado fuera del sistema: lo que ese viaje dejó. */
+    /** Vendido (pagado y apartado, abonos incluidos) + vendido sin apartar en guía: lo que ese viaje dejó. */
     public function getMontoAttribute(): float
     {
-        return (float) $this->sold_amount + (float) $this->abonos_amount + (float) $this->external_amount;
+        return (float) $this->sold_amount + (float) $this->external_amount;
     }
 
     public function getConceptoAttribute(): string
@@ -42,7 +42,7 @@ class MerloCorte extends Model
         IngresoEgreso::registrarDesdeOrigen($this, [
             'tipo' => 'ingreso',
             'concepto' => $this->concepto,
-            'descripcion' => "{$this->sold_seats} vendidos, {$this->late_sold_seats} vendidos después, {$this->free_seats} sobraron de {$this->total_seats}; ventas \${$this->sold_amount} + abonos \${$this->abonos_amount} + fuera del sistema \${$this->external_amount} ({$this->external_seats} asientos)",
+            'descripcion' => "{$this->sold_seats} vendidos, {$this->late_sold_seats} vendidos después, {$this->free_seats} sobraron de {$this->total_seats}; vendido \${$this->sold_amount} (abonos ya recibidos \${$this->abonos_amount}) + vendido sin apartar en guía \${$this->external_amount} ({$this->external_seats} asientos)",
             'monto' => $this->monto,
             'fecha' => $this->fecha,
             'categoria' => 'Venta de boletos',
