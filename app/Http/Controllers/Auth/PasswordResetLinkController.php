@@ -33,17 +33,19 @@ class PasswordResetLinkController extends Controller
             'username' => ['required', 'string'],
         ]);
 
-        $user = User::where('username', $request->string('username')->toString())->first();
+        $user = User::findByIdentifier($request->string('username')->toString());
 
         if (! $user) {
             return back()->withInput()->withErrors([
-                'username' => 'No encontramos una cuenta con ese usuario.',
+                'username' => 'No encontramos una cuenta con ese usuario o correo. Si tu correo es compartido, usa tu usuario o tu correo secundario.',
             ]);
         }
 
-        if (! $user->correo_secundario) {
+        $recoveryEmail = $user->recoveryEmail();
+
+        if (! $recoveryEmail) {
             return back()->withInput()->withErrors([
-                'username' => 'Esta cuenta no tiene un correo secundario registrado para recuperar la contraseña. Contacta a un administrador.',
+                'username' => 'Esta cuenta comparte correo y no tiene un correo secundario registrado para recuperar la contraseña. Contacta a un administrador.',
             ]);
         }
 
@@ -52,7 +54,7 @@ class PasswordResetLinkController extends Controller
         $code = (string) random_int(100000, 999999);
         $resetCode = PasswordResetCode::create([
             'user_id' => $user->id,
-            'email' => $user->correo_secundario,
+            'email' => $recoveryEmail,
             'code_hash' => Hash::make($code),
             'expires_at' => now()->addMinutes(15),
         ]);
@@ -60,7 +62,7 @@ class PasswordResetLinkController extends Controller
         $user->notify(new PasswordResetCodeNotification($code));
 
         return back()->with([
-            'status' => 'Te enviamos un código de seguridad a tu correo secundario.',
+            'status' => 'Te enviamos un código de seguridad a tu correo de recuperación.',
             'code_sent' => true,
             'reset_username' => $user->username,
         ]);
@@ -73,6 +75,7 @@ class PasswordResetLinkController extends Controller
             'code' => ['required', 'digits:6'],
         ]);
 
+        // El formulario reenvía el usuario real (reset_username) tras pedir el código.
         $resetCode = PasswordResetCode::whereHas('user', fn ($q) => $q->where('username', $request->string('username')->toString()))
             ->whereNull('used_at')
             ->latest()

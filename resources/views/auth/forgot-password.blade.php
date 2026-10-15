@@ -92,7 +92,7 @@
                     {{-- Usuario --}}
                     <div>
                         <label for="username" class="block text-sm font-medium text-gray-300 mb-1.5">
-                            Usuario
+                            Usuario o correo
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -109,7 +109,7 @@
                                 required
                                 autofocus
                                 autocomplete="username"
-                                placeholder="Ej: jperez"
+                                placeholder="Ej: jperez o correo@ejemplo.com"
                                 class="w-full pl-10 pr-4 py-3 bg-gray-900/80 border {{ $errors->has('username') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white placeholder-gray-600 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                             />
                         </div>

@@ -54,6 +54,44 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Resuelve a la cuenta por usuario, o por correo (principal o
+     * secundario) cuando ese correo identifica a UNA sola cuenta. Los
+     * correos principales compartidos por camión son ambiguos: ahí solo
+     * sirve el usuario o el correo secundario personal.
+     */
+    public static function findByIdentifier(string $identifier): ?self
+    {
+        $identifier = trim($identifier);
+
+        if ($user = static::where('username', $identifier)->first()) {
+            return $user;
+        }
+
+        if ($user = static::where('correo_secundario', $identifier)->first()) {
+            return $user;
+        }
+
+        $byEmail = static::where('email', $identifier)->limit(2)->get();
+
+        return $byEmail->count() === 1 ? $byEmail->first() : null;
+    }
+
+    /**
+     * Correo donde llega el código de recuperación: el secundario, o el
+     * principal si no está compartido con otra cuenta.
+     */
+    public function recoveryEmail(): ?string
+    {
+        if ($this->correo_secundario) {
+            return $this->correo_secundario;
+        }
+
+        $shared = static::where('email', $this->email)->where('id', '!=', $this->id)->exists();
+
+        return $shared ? null : $this->email;
+    }
+
     const ROLE_LABELS = [
         'superadmin'       => 'Superadmin',
         'administracion'   => 'Administración',
