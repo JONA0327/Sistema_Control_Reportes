@@ -36,11 +36,13 @@ class MerloCorteLine extends Model
 
         $corte = $this->corte()->with('contrato')->first();
         $tipo = $this->esGasto() ? 'egreso' : 'ingreso';
+        // Lleva el folio del contrato (igual que el ingreso de boletos) para ubicarlo en Ingresos y Egresos.
+        $concepto = "Corte Merlo {$corte->ruta} ({$corte->fecha->format('d/m/Y')}) - contrato {$corte->contrato->folio}: {$this->concepto}";
         $detalle = ((float) $this->cantidad !== 1.0 ? "{$this->cantidad} × \${$this->monto_unitario}" : null);
 
         IngresoEgreso::registrarDesdeOrigen($this, [
             'tipo' => $tipo,
-            'concepto' => "Corte Merlo {$corte->ruta} ({$corte->fecha->format('d/m/Y')}): {$this->concepto}",
+            'concepto' => $concepto,
             'descripcion' => trim(($detalle ? $detalle.'. ' : '').($this->nota ?? '')) ?: null,
             'monto' => $this->monto,
             'fecha' => $corte->fecha,
@@ -50,6 +52,9 @@ class MerloCorteLine extends Model
             'user_id' => $userId,
         ]);
         IngresoEgreso::actualizarMontoDesdeOrigen($this, (float) $this->monto);
+        // Si ya existía (p. ej. se reenvió el corte o cambió de contrato), se pone al día el texto y la clasificación.
+        IngresoEgreso::actualizarClasificacionDesdeOrigen($this, $corte->contrato->tipo, $corte->contrato->pais_ingreso);
+        IngresoEgreso::withoutGlobalScopes()->where('origenable_type', $this->getMorphClass())->where('origenable_id', $this->getKey())->update(['concepto' => $concepto]);
         IngresoEgreso::actualizarTipoDesdeOrigen($this, $tipo);
     }
 }
