@@ -11,9 +11,15 @@ use Illuminate\Validation\Rule;
 
 class LiquidacionController extends Controller
 {
+    /** El operador del viaje, o administración (gastos.aprobar) capturando por él cuando aún no lo hace. */
+    private function puedeCapturar(Request $request, Liquidacion $liquidacion): bool
+    {
+        return $liquidacion->viaje->operador_id === $request->user()->id || $request->user()->can('gastos.aprobar');
+    }
+
     public function updateKm(Request $request, Liquidacion $liquidacion)
     {
-        abort_if($liquidacion->viaje->operador_id !== $request->user()->id, 403);
+        abort_unless($this->puedeCapturar($request, $liquidacion), 403);
         abort_if($liquidacion->estado !== 'abierta', 403);
 
         $data = $request->validate([
@@ -28,7 +34,7 @@ class LiquidacionController extends Controller
 
     public function storeGasto(Request $request, Liquidacion $liquidacion)
     {
-        abort_if($liquidacion->viaje->operador_id !== $request->user()->id, 403);
+        abort_unless($this->puedeCapturar($request, $liquidacion), 403);
         abort_if($liquidacion->estado !== 'abierta', 403);
 
         $data = $request->validate([
@@ -51,7 +57,9 @@ class LiquidacionController extends Controller
             'evidencia_path' => $request->hasFile('evidencia')
                 ? $request->file('evidencia')->store('liquidacion_gastos', 'public')
                 : null,
-            'estado' => 'pendiente',
+            // Lo que captura administración ya viene validado; el del operador espera su aceptación.
+            'estado' => $liquidacion->viaje->operador_id === $request->user()->id ? 'pendiente' : 'aceptado',
+            'capturado_por' => $liquidacion->viaje->operador_id === $request->user()->id ? null : $request->user()->id,
         ]);
 
         return back()->with('success', 'Gasto registrado.');
@@ -61,7 +69,7 @@ class LiquidacionController extends Controller
     {
         $liquidacion = $liquidacionGasto->liquidacion;
 
-        abort_if($liquidacion->viaje->operador_id !== $request->user()->id, 403);
+        abort_unless($this->puedeCapturar($request, $liquidacion), 403);
         abort_if($liquidacion->estado !== 'abierta', 403);
 
         if ($liquidacionGasto->evidencia_path) {
@@ -75,7 +83,7 @@ class LiquidacionController extends Controller
 
     public function cerrar(Request $request, Liquidacion $liquidacion)
     {
-        abort_if($liquidacion->viaje->operador_id !== $request->user()->id, 403);
+        abort_unless($this->puedeCapturar($request, $liquidacion), 403);
         abort_if($liquidacion->estado !== 'abierta', 403);
 
         if (is_null($liquidacion->km_inicial) || is_null($liquidacion->km_final)) {

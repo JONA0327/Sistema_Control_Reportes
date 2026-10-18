@@ -181,7 +181,8 @@ class Contrato extends Model
             ->concat($this->pagos()->get())
             ->concat(Viaje::whereIn('id', $viajeIds)->get())
             ->concat(DieselCarga::whereIn('viaje_id', $viajeIds)->get())
-            ->concat(MerloCorte::where('contrato_id', $this->id)->get());
+            ->concat(MerloCorte::where('contrato_id', $this->id)->get())
+            ->concat(MerloCorteLine::whereIn('merlo_corte_id', MerloCorte::where('contrato_id', $this->id)->select('id'))->get());
 
         foreach ($origenes as $origen) {
             IngresoEgreso::actualizarClasificacionDesdeOrigen($origen, $this->tipo, $this->pais_ingreso);

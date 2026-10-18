@@ -49,7 +49,7 @@
 
     <div class="max-w-3xl space-y-4">
         @if($viaje->liquidacion)
-            @include('liquidacion._resumen', ['liquidacion' => $viaje->liquidacion, 'editable' => false])
+            @include('liquidacion._resumen', ['liquidacion' => $viaje->liquidacion, 'editable' => $viaje->liquidacion->estado === 'abierta'])
         @endif
 
         @forelse($viaje->dieselCargas as $carga)
@@ -211,9 +211,20 @@
                 @if($viaje->liquidacion->estado === 'cerrada')
                     @include('liquidacion._gastos_list', ['liquidacion' => $viaje->liquidacion, 'context' => 'admin'])
                 @else
-                    <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl p-6 text-center">
-                        <p class="text-sm text-gray-500">Liquidación aún abierta, esperando que el operador la cierre.</p>
+                    <p class="mb-3 text-xs text-gray-500">Liquidación abierta. Si el operador aún no la captura, administración puede registrar los gastos y cerrarla por él.</p>
+                    <div class="space-y-3">
+                        @include('liquidacion._gastos_list', ['liquidacion' => $viaje->liquidacion, 'context' => 'operador'])
+                        @include('liquidacion._gasto_form', ['liquidacion' => $viaje->liquidacion])
                     </div>
+                    <form method="POST" action="{{ route('liquidacion.cerrar', $viaje->liquidacion) }}"
+                          onsubmit="return confirm('¿Cerrar la liquidación de este viaje? Ya no se podrán agregar ni eliminar gastos.')" class="pt-4">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="w-full px-4 py-2.5 btn-login-gradient text-white text-sm font-semibold rounded-xl shadow-lg shadow-red-950/40">
+                            Cerrar liquidación (por administración)
+                        </button>
+                        <p class="mt-2 text-xs text-gray-600 text-center">Requiere km inicial y final. Ciérrala cuando ya estén todos los gastos.</p>
+                    </form>
                 @endif
             </div>
         @endif

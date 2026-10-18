@@ -53,6 +53,7 @@ class IngresoEgreso extends Model
             $origen instanceof Contrato => $origen,
             $origen instanceof ContratoAnticipo, $origen instanceof ContratoPago,
             $origen instanceof MerloCorte, $origen instanceof Viaje => $origen->contrato,
+            $origen instanceof MerloCorteLine => $origen->corte?->contrato,
             $origen instanceof DieselCarga => $origen->viaje?->contrato,
             default => null,
         };

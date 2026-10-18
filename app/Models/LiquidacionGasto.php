@@ -41,6 +41,7 @@ class LiquidacionGasto extends Model
         'evidencia_path',
         'estado',
         'motivo_rechazo',
+        'capturado_por',
     ];
 
     public function liquidacion()

@@ -12,7 +12,9 @@
         $totalEgresos = $egresos->sum('monto');
         $esCompras = $viaje->es_compras;
         $costoContrato = (float) $viaje->contrato->costo_viaje;
-        $totalIngresos = $esCompras ? $cortes->sum('monto') : $costoContrato;
+        $lineasCorte = $esCompras ? $cortes->flatMap->lines : collect();
+        $otrosIngresos = (float) $lineasCorte->where('kind', 'ingreso')->where('cuenta', true)->sum('monto');
+        $totalIngresos = $esCompras ? $cortes->sum('monto') + $otrosIngresos : $costoContrato;
         $liq = $viaje->liquidacion;
     @endphp
 
@@ -75,10 +77,90 @@
             @empty
                 <p class="text-sm text-gray-500">Merlo aún no envía el corte de este viaje.</p>
             @endforelse
+            @foreach($lineasCorte->where('kind', 'ingreso')->where('cuenta', true) as $l)
+                <div class="flex justify-between py-2 border-b border-gray-700/40 text-sm"><span class="text-gray-300">Corte Merlo: {{ $l->concepto }}</span><span class="text-gray-200">{{ $money($l->monto) }}</span></div>
+            @endforeach
             <div class="flex justify-between pt-3 text-sm font-semibold"><span class="text-gray-400">Total ingresos</span><span class="text-emerald-400">{{ $money($totalIngresos) }}</span></div>
         </div>
         @endunless
     </div>
+
+    @if($esCompras && $cortes->isNotEmpty())
+        <h2 class="text-sm font-semibold text-white mb-3">Corte del viaje en Merlo (desglose del día)</h2>
+        @foreach($cortes as $c)
+            @php
+                $dz = $c->desglose ?? [];
+                $gastos = $c->lines->where('kind', 'gasto');
+                $otros = $c->lines->where('kind', 'ingreso');
+            @endphp
+            <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl p-5 mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <p class="text-sm text-gray-200">{{ $c->ruta }} · {{ $c->fecha->format('d/m/Y') }}</p>
+                    <p class="text-xs text-gray-500">{{ $c->sold_seats + $c->external_seats }} asientos vendidos de {{ $c->total_seats }}</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-xs uppercase text-gray-500 mb-2">Ventas por categoría</h3>
+                        @forelse($dz['by_type'] ?? [] as $r)
+                            <div class="flex justify-between py-1.5 border-b border-gray-700/30 text-sm"><span class="text-gray-400">{{ $r['seats'] }} {{ $r['label'] }}</span><span class="text-gray-200">{{ $money($r['amount']) }}</span></div>
+                        @empty
+                            <p class="text-sm text-gray-500">—</p>
+                        @endforelse
+                        @if($c->external_seats > 0)
+                            <div class="flex justify-between py-1.5 border-b border-gray-700/30 text-sm"><span class="text-gray-400">{{ $c->external_seats }} sin apartar en guía</span><span class="text-gray-200">{{ $money($c->external_amount) }}</span></div>
+                        @endif
+                        <div class="flex justify-between pt-2 text-sm font-semibold"><span class="text-gray-300">Recaudado</span><span class="text-gray-100">{{ $money($c->sold_amount + $c->external_amount) }}</span></div>
+
+                        <h3 class="text-xs uppercase text-gray-500 mt-5 mb-2">Por forma de pago</h3>
+                        @foreach($dz['by_method'] ?? [] as $r)
+                            <div class="flex justify-between py-1.5 border-b border-gray-700/30 text-sm"><span class="text-gray-400">{{ $r['seats'] }} · {{ $r['label'] }}</span><span class="text-gray-200">{{ $money($r['amount']) }}</span></div>
+                        @endforeach
+                        @if(($dz['abonos_amount'] ?? 0) > 0)
+                            <div class="flex justify-between py-1.5 border-b border-gray-700/30 text-sm"><span class="text-gray-400">Abonos recibidos (apartados)</span><span class="text-gray-200">{{ $money($dz['abonos_amount']) }}</span></div>
+                        @endif
+                        @if(($dz['por_cobrar_seats'] ?? 0) > 0)
+                            <div class="flex justify-between py-1.5 text-sm"><span class="text-amber-400">{{ $dz['por_cobrar_seats'] }} por cobrar</span><span class="text-amber-400">{{ $money($dz['por_cobrar_amount']) }}</span></div>
+                        @endif
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs uppercase text-gray-500 mb-2">Gastos del día</h3>
+                        @forelse($gastos as $l)
+                            <div class="flex justify-between gap-3 py-1.5 border-b border-gray-700/30 text-sm">
+                                <span class="text-gray-300">{{ $l->concepto }}
+                                    @if((float) $l->cantidad !== 1.0)<span class="text-xs text-gray-500">({{ rtrim(rtrim(number_format($l->cantidad, 2), '0'), '.') }} × {{ $money($l->monto_unitario) }})</span>@endif
+                                    @if($l->nota)<span class="text-xs text-gray-500">· {{ $l->nota }}</span>@endif
+                                    @unless($l->cuenta)<span class="text-[10px] text-gray-500 border border-gray-600/50 rounded px-1">informativo</span>@endunless
+                                </span>
+                                <span class="{{ $l->cuenta ? 'text-red-400' : 'text-gray-500' }}">{{ $money($l->monto) }}</span>
+                            </div>
+                        @empty
+                            <p class="text-sm text-gray-500">Sin gastos.</p>
+                        @endforelse
+                        @if($gastos->isNotEmpty())
+                            <div class="flex justify-between pt-2 text-sm font-semibold"><span class="text-gray-300">Total gastos (cuentan como egreso)</span><span class="text-red-400">{{ $money($gastos->where('cuenta', true)->sum('monto')) }}</span></div>
+                        @endif
+
+                        @if($otros->isNotEmpty())
+                            <h3 class="text-xs uppercase text-gray-500 mt-5 mb-2">Otros ingresos del día</h3>
+                            @foreach($otros as $l)
+                                <div class="flex justify-between gap-3 py-1.5 border-b border-gray-700/30 text-sm">
+                                    <span class="text-gray-300">{{ $l->concepto }}@if($l->nota) <span class="text-xs text-gray-500">· {{ $l->nota }}</span>@endif @unless($l->cuenta)<span class="text-[10px] text-gray-500 border border-gray-600/50 rounded px-1">informativo</span>@endunless</span>
+                                    <span class="{{ $l->cuenta ? 'text-emerald-400' : 'text-gray-500' }}">{{ $money($l->monto) }}</span>
+                                </div>
+                            @endforeach
+                        @endif
+
+                        <div class="mt-5 rounded-xl bg-gray-900/50 border border-gray-700/40 px-4 py-3 flex justify-between text-sm">
+                            <span class="text-gray-400">Efectivo (capturado en Merlo)</span>
+                            <span class="font-semibold text-gray-100">{{ $c->efectivo !== null ? $money($c->efectivo) : '—' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    @endif
 
     @if($desglose)
         @php

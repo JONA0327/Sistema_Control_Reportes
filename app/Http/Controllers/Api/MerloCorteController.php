@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Contrato;
 use App\Models\MerloCorte;
+use App\Models\MerloCorteLine;
 use App\Models\MerloCortePaqueteria;
 use App\Models\MerloPaqueteriaEgreso;
 use App\Models\IngresoEgreso;
@@ -91,6 +92,17 @@ class MerloCorteController extends Controller
             'total_cost' => ['required', 'numeric', 'min:0'],
             'external_seats' => ['nullable', 'integer', 'min:0'],
             'external_amount' => ['nullable', 'numeric', 'min:0'],
+            'efectivo' => ['nullable', 'numeric', 'min:0'],
+            'desglose' => ['nullable', 'array'],
+            'lines' => ['nullable', 'array'],
+            'lines.*.id' => ['required', 'integer'],
+            'lines.*.kind' => ['required', 'in:gasto,ingreso'],
+            'lines.*.concept' => ['required', 'string', 'max:255'],
+            'lines.*.quantity' => ['required', 'numeric', 'min:0.01'],
+            'lines.*.unit_amount' => ['required', 'numeric', 'min:0.01'],
+            'lines.*.amount' => ['required', 'numeric', 'min:0.01'],
+            'lines.*.note' => ['nullable', 'string', 'max:255'],
+            'lines.*.counts' => ['required', 'boolean'],
             'contrato_id' => ['required', 'integer', Rule::exists('contratos', 'id')->where('tipo', 'compras')],
         ]);
 
@@ -100,14 +112,30 @@ class MerloCorteController extends Controller
         }
 
         $corte = DB::transaction(function () use ($d, $userId) {
+            $lines = $d['lines'] ?? [];
+            unset($d['lines']);
             $d += ['external_seats' => 0, 'external_amount' => 0];
             $d['external_seats'] ??= 0;
             $d['external_amount'] ??= 0;
             $corte = MerloCorte::updateOrCreate(['trip_id' => $d['trip_id']], $d);
 
             // El ingreso entra al cierre del viaje; si ya se cerró, entra de inmediato.
+            foreach ($lines as $l) {
+                MerloCorteLine::updateOrCreate(['merlo_id' => $l['id']], [
+                    'merlo_corte_id' => $corte->id, 'kind' => $l['kind'], 'concepto' => $l['concept'],
+                    'cantidad' => $l['quantity'], 'monto_unitario' => $l['unit_amount'], 'monto' => $l['amount'],
+                    'nota' => $l['note'] ?? null, 'cuenta' => (bool) $l['counts'],
+                ]);
+            }
+            // Renglones que Merlo ya no manda: se quitan (y su movimiento, si ya había entrado).
+            $corte->lines()->whereNotIn('merlo_id', collect($lines)->pluck('id'))->get()->each(function ($x) {
+                IngresoEgreso::eliminarDesdeOrigen($x);
+                $x->delete();
+            });
+
             if (Viaje::where('contrato_id', $corte->contrato_id)->whereNotNull('cerrado_at')->exists()) {
                 $corte->registrarIngreso($userId);
+                $corte->load('lines')->lines->each->sincronizarMovimiento($userId);
             }
 
             return $corte;

@@ -87,7 +87,7 @@ class Viaje extends Model
 
     public function cortesMerlo(): Collection
     {
-        return MerloCorte::with('contrato')->where('contrato_id', $this->contrato_id)->orderBy('fecha')->get();
+        return MerloCorte::with('contrato', 'lines')->where('contrato_id', $this->contrato_id)->orderBy('fecha')->get();
     }
 
     private function cargasParaEgreso(): Collection
@@ -105,6 +105,15 @@ class Viaje extends Model
 
         if ($this->gastos_entregados > 0) {
             $lineas->push(['concepto' => 'Gastos entregados al operador', 'monto' => (float) $this->gastos_entregados]);
+        }
+
+        // Gastos del corte de Merlo (sueldos, casetas, estacionamiento…) que cuentan como egreso.
+        if ($this->es_compras) {
+            foreach ($this->cortesMerlo() as $corte) {
+                foreach ($corte->lines->where('kind', 'gasto')->where('cuenta', true) as $l) {
+                    $lineas->push(['concepto' => 'Corte Merlo: '.$l->concepto, 'monto' => (float) $l->monto]);
+                }
+            }
         }
 
         // En turismo/americano el contrato es ingreso (lo paga el cliente), no un egreso del viaje.
@@ -153,6 +162,7 @@ class Viaje extends Model
 
             foreach ($this->cortesMerlo() as $corte) {
                 $corte->registrarIngreso($userId);
+                $corte->lines->each->sincronizarMovimiento($userId);
             }
 
             $this->forceFill(['cerrado_at' => now(), 'cerrado_by' => $userId])->save();

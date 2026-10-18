@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MerloCorte extends Model
 {
@@ -11,7 +12,12 @@ class MerloCorte extends Model
 
     protected function casts(): array
     {
-        return ['fecha' => 'date'];
+        return ['fecha' => 'date', 'desglose' => 'array'];
+    }
+
+    public function lines(): HasMany
+    {
+        return $this->hasMany(MerloCorteLine::class);
     }
 
     public function contrato(): BelongsTo

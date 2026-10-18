@@ -112,6 +112,7 @@ class ContratoHistoricoSistemaController extends Controller
             [Viaje::class, $viajeIds],
             [DieselCarga::class, DieselCarga::whereIn('viaje_id', $viajeIds)->pluck('id')],
             [MerloCorte::class, MerloCorte::where('contrato_id', $contrato->id)->pluck('id')],
+            [\App\Models\MerloCorteLine::class, \App\Models\MerloCorteLine::whereIn('merlo_corte_id', MerloCorte::where('contrato_id', $contrato->id)->select('id'))->pluck('id')],
         ];
 
         return IngresoEgreso::withoutGlobalScopes()

@@ -15,7 +15,9 @@
                     <span class="text-xs text-gray-500 font-normal">· {{ $gasto->concepto }}</span>
                 @endif
             </p>
-            <p class="text-base font-bold text-white mt-0.5">${{ number_format($gasto->monto, 2) }}</p>
+            <p class="text-base font-bold text-white mt-0.5">${{ number_format($gasto->monto, 2) }}
+                @if($gasto->capturado_por)<span class="ml-1 text-[10px] font-medium text-gray-500">· capturado por administración</span>@endif
+            </p>
         </div>
         <span class="text-xs px-2.5 py-1 rounded-lg border font-medium whitespace-nowrap flex-shrink-0 {{ $estadoBadge }}">
             {{ ucfirst($gasto->estado) }}
