@@ -83,6 +83,58 @@
                         </div>
 
                         <div>
+                            <label for="serie" class="block text-xs font-medium text-gray-400 mb-1.5">
+                                Serie
+                                <span class="text-xs text-gray-600 font-normal">(opcional)</span>
+                            </label>
+                            <input type="text" id="serie" name="serie" value="{{ old('serie', $bus->serie) }}"
+                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('serie') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors font-mono uppercase tracking-wider"
+                                   maxlength="50"/>
+                            @error('serie')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="marca" class="block text-xs font-medium text-gray-400 mb-1.5">
+                                Marca
+                                <span class="text-xs text-gray-600 font-normal">(opcional)</span>
+                            </label>
+                            <input type="text" id="marca" name="marca" value="{{ old('marca', $bus->marca) }}"
+                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('marca') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                                   maxlength="100"/>
+                            @error('marca')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="anio" class="block text-xs font-medium text-gray-400 mb-1.5">
+                                Año
+                                <span class="text-xs text-gray-600 font-normal">(opcional)</span>
+                            </label>
+                            <input type="number" id="anio" name="anio" value="{{ old('anio', $bus->anio) }}"
+                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('anio') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                                   min="1950" max="{{ date('Y') + 1 }}"/>
+                            @error('anio')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="modelo" class="block text-xs font-medium text-gray-400 mb-1.5">
+                                Modelo
+                                <span class="text-xs text-gray-600 font-normal">(opcional)</span>
+                            </label>
+                            <input type="text" id="modelo" name="modelo" value="{{ old('modelo', $bus->modelo) }}"
+                                   class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('modelo') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                                   maxlength="100"/>
+                            @error('modelo')
+                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
                             <label for="num_asientos" class="block text-xs font-medium text-gray-400 mb-1.5">
                                 Número de asientos
                                 <span class="text-xs text-gray-600 font-normal">(opcional)</span>

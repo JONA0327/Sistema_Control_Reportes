@@ -55,6 +55,22 @@
                         <p class="text-sm font-mono font-medium text-gray-200 tracking-wider uppercase">{{ $bus->placa }}</p>
                     </div>
                     <div>
+                        <p class="text-xs text-gray-500">Serie</p>
+                        <p class="text-sm font-mono text-gray-200 tracking-wider uppercase">{{ $bus->serie ?: '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Marca</p>
+                        <p class="text-sm text-gray-200">{{ $bus->marca ?: '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Modelo</p>
+                        <p class="text-sm text-gray-200">{{ $bus->modelo ?: '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Año</p>
+                        <p class="text-sm text-gray-200">{{ $bus->anio ?: '—' }}</p>
+                    </div>
+                    <div>
                         <p class="text-xs text-gray-500">Estado</p>
                         @php
                             $badge = match($bus->status) {

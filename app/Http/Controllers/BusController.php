@@ -47,6 +47,10 @@ class BusController extends Controller
         $data = $request->validate([
             'num_bus'      => ['required', 'integer', 'unique:buses'],
             'placa'        => ['required', 'string', 'max:20', 'unique:buses'],
+            'serie'        => ['nullable', 'string', 'max:50'],
+            'marca'        => ['nullable', 'string', 'max:100'],
+            'anio'         => ['nullable', 'integer', 'min:1950', 'max:'.(date('Y') + 1)],
+            'modelo'       => ['nullable', 'string', 'max:100'],
             'num_asientos' => ['nullable', 'integer', 'min:1', 'max:100'],
             'status'       => ['required', 'string', Rule::in(['activo', 'inactivo', 'mantenimiento'])],
             'operator_id'  => ['nullable', 'exists:users,id'],
@@ -75,6 +79,10 @@ class BusController extends Controller
         $data = $request->validate([
             'num_bus'      => ['required', 'integer', Rule::unique('buses')->ignore($bus->id)],
             'placa'        => ['required', 'string', 'max:20', Rule::unique('buses')->ignore($bus->id)],
+            'serie'        => ['nullable', 'string', 'max:50'],
+            'marca'        => ['nullable', 'string', 'max:100'],
+            'anio'         => ['nullable', 'integer', 'min:1950', 'max:'.(date('Y') + 1)],
+            'modelo'       => ['nullable', 'string', 'max:100'],
             'num_asientos' => ['nullable', 'integer', 'min:1', 'max:100'],
             'status'       => ['required', 'string', Rule::in(['activo', 'inactivo', 'mantenimiento'])],
             'operator_id'  => ['nullable', 'exists:users,id'],

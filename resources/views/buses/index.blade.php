@@ -97,6 +97,12 @@
                                 @endif
                                 <div>
                                     <p class="text-sm font-semibold text-white">Bus #{{ $bus->num_bus }}</p>
+                                    @if($bus->marca || $bus->modelo || $bus->anio)
+                                        <p class="text-xs text-gray-500">
+                                            {{ trim(($bus->marca ?? '').' '.($bus->modelo ?? '')) }}
+                                            @if($bus->anio) ({{ $bus->anio }}) @endif
+                                        </p>
+                                    @endif
                                 </div>
                             </div>
                         </td>
