@@ -13,6 +13,7 @@ class Liquidacion extends Model
         'km_inicial',
         'km_final',
         'estado',
+        'excel_path',
         'cerrada_at',
         'cerrada_by',
     ];

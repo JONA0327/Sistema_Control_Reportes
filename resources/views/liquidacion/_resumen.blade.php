@@ -5,9 +5,17 @@
 <div class="border border-gray-700/40 rounded-xl p-4">
     <div class="flex items-center justify-between gap-3 mb-3">
         <h3 class="text-sm font-semibold text-white">Liquidación</h3>
-        <span class="text-xs px-2.5 py-1 rounded-lg border font-medium whitespace-nowrap {{ $liquidacion->estado === 'cerrada' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20' }}">
-            {{ $liquidacion->estado === 'cerrada' ? 'Cerrada' : 'Abierta' }}
-        </span>
+        <div class="flex items-center gap-2">
+            @if($liquidacion->excel_path)
+                <a href="{{ Storage::url($liquidacion->excel_path) }}" target="_blank"
+                   class="text-xs px-2.5 py-1 rounded-lg border border-gray-700/50 text-gray-400 hover:text-white hover:border-gray-600 transition-colors whitespace-nowrap">
+                    Ver Excel importado
+                </a>
+            @endif
+            <span class="text-xs px-2.5 py-1 rounded-lg border font-medium whitespace-nowrap {{ $liquidacion->estado === 'cerrada' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20' }}">
+                {{ $liquidacion->estado === 'cerrada' ? 'Cerrada' : 'Abierta' }}
+            </span>
+        </div>
     </div>
 
     {{-- Km --}}

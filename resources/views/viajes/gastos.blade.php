@@ -212,6 +212,30 @@
                     @include('liquidacion._gastos_list', ['liquidacion' => $viaje->liquidacion, 'context' => 'admin'])
                 @else
                     <p class="mb-3 text-xs text-gray-500">Liquidación abierta. Si el operador aún no la captura, administración puede registrar los gastos y cerrarla por él.</p>
+
+                    {{-- Importar hoja de liquidación en Excel --}}
+                    <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl p-5 mb-4">
+                        <h4 class="text-sm font-semibold text-white mb-1">Subir hoja de liquidación en Excel</h4>
+                        <p class="text-xs text-gray-500 mb-3">
+                            Si el operador entregó la liquidación en el Excel de siempre, súbelo aquí: se leen km, diésel y gastos (casetas, hospedaje, comida, estacionamiento, lavada, otros), se guarda el archivo como respaldo, y se cierra la liquidación automáticamente.
+                        </p>
+                        <form method="POST" action="{{ route('liquidacion.importar-excel', $viaje->liquidacion) }}" enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
+                            @csrf
+                            <div class="flex-1 min-w-[200px]">
+                                <input type="file" name="excel" accept=".xlsx,.xls" required
+                                       class="w-full text-sm text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-700 file:text-gray-200 hover:file:bg-gray-600 bg-gray-900/80 border border-gray-700 rounded-xl"/>
+                            </div>
+                            <button type="submit" class="btn-login-gradient px-5 py-2.5 text-white text-sm font-semibold rounded-xl shadow-lg shadow-red-950/40 whitespace-nowrap">
+                                Importar y cerrar
+                            </button>
+                        </form>
+                        @error('excel')
+                            <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <p class="mb-3 text-xs text-gray-600 text-center">— o captura los gastos manualmente —</p>
+
                     <div class="space-y-3">
                         @include('liquidacion._gastos_list', ['liquidacion' => $viaje->liquidacion, 'context' => 'operador'])
                         @include('liquidacion._gasto_form', ['liquidacion' => $viaje->liquidacion])
