@@ -2,11 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DieselCarga;
-use App\Models\IngresoEgreso;
 use App\Models\Liquidacion;
 use App\Models\LiquidacionGasto;
-use App\Support\LiquidacionExcelParser;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -100,118 +97,6 @@ class LiquidacionController extends Controller
         ]);
 
         return back()->with('success', 'Liquidación cerrada correctamente.');
-    }
-
-    /**
-     * Importa la hoja de liquidación en Excel que el operador ya traía
-     * llenada fuera del sistema (ver liquidacion.xlsx). Llena km, diésel y
-     * los gastos del viaje a partir del Excel, guarda el archivo como
-     * respaldo, y cierra la liquidación si quedó todo lo necesario (km
-     * inicial y final). El costo del viaje y los gastos entregados que ya
-     * estaban capturados en el sistema no se sobrescriben con el Excel para
-     * no desajustar los ingresos/egresos ya generados desde el contrato;
-     * si no coinciden se avisa, nada más.
-     */
-    public function importarExcel(Request $request, Liquidacion $liquidacion)
-    {
-        abort_unless($this->puedeCapturar($request, $liquidacion), 403);
-        abort_if($liquidacion->estado !== 'abierta', 403);
-
-        $request->validate([
-            'excel' => ['required', 'file', 'mimes:xlsx,xls', 'max:5120'],
-        ]);
-
-        $path = $request->file('excel')->store('liquidacion_excel', 'public');
-        $datos = LiquidacionExcelParser::leer(Storage::disk('public')->path($path));
-
-        $viaje = $liquidacion->viaje;
-        $userId = $request->user()->id;
-
-        $liquidacion->fill([
-            'excel_path' => $path,
-            'km_inicial' => $datos['km_inicial'] ?? $liquidacion->km_inicial,
-            'km_final'   => $datos['km_final'] ?? $liquidacion->km_final,
-        ])->save();
-
-        if (! is_null($datos['diesel_viaje_monto']) && $datos['diesel_viaje_monto'] > 0) {
-            $inicial = $viaje->dieselCargas()->where('tipo', 'inicial')->first();
-
-            if ($inicial) {
-                $inicial->update(['monto' => $datos['diesel_viaje_monto'], 'litros' => $datos['diesel_viaje_litros']]);
-                IngresoEgreso::actualizarMontoDesdeOrigen($inicial, (float) $datos['diesel_viaje_monto']);
-            } else {
-                $inicial = DieselCarga::create([
-                    'viaje_id' => $viaje->id,
-                    'tipo' => 'inicial',
-                    'monto' => $datos['diesel_viaje_monto'],
-                    'litros' => $datos['diesel_viaje_litros'],
-                    'origen' => 'administracion',
-                    'estado_solicitud' => 'aprobada',
-                    'requested_by' => $userId,
-                    'reviewed_by' => $userId,
-                    'reviewed_at' => now(),
-                ]);
-                $inicial->registrarEgresoAutomatico($userId);
-            }
-        }
-
-        if (! is_null($datos['diesel_llegada_monto']) && $datos['diesel_llegada_monto'] > 0) {
-            $extra = DieselCarga::create([
-                'viaje_id' => $viaje->id,
-                'tipo' => 'extra',
-                'monto' => $datos['diesel_llegada_monto'],
-                'litros' => $datos['diesel_llegada_litros'],
-                'origen' => 'administracion',
-                'estado_solicitud' => 'aprobada',
-                'requested_by' => $userId,
-                'reviewed_by' => $userId,
-                'reviewed_at' => now(),
-            ]);
-            $extra->registrarEgresoAutomatico($userId);
-        }
-
-        if (! is_null($datos['gastos_entregados']) && round((float) $datos['gastos_entregados'], 2) !== round((float) $viaje->gastos_entregados, 2)) {
-            $viaje->update(['gastos_entregados' => $datos['gastos_entregados']]);
-            IngresoEgreso::actualizarMontoDesdeOrigen($viaje, (float) $viaje->gastos_entregados);
-        }
-
-        $mapaGastos = [
-            'casetas' => 'caseta',
-            'hospedaje' => 'hospedaje',
-            'comida' => 'comida',
-            'estacionamiento' => 'estacionamiento',
-            'lavada' => 'lavada',
-            'otros_gastos' => 'otro',
-        ];
-        foreach ($mapaGastos as $campo => $tipo) {
-            if (! empty($datos[$campo]) && $datos[$campo] > 0) {
-                LiquidacionGasto::create([
-                    'liquidacion_id' => $liquidacion->id,
-                    'tipo' => $tipo,
-                    'concepto' => is_null(LiquidacionGasto::TIPOS[$tipo]['concepto_label']) ? null : 'Importado de Excel',
-                    'monto' => $datos[$campo],
-                    'estado' => 'aceptado',
-                    'capturado_por' => $userId,
-                ]);
-            }
-        }
-
-        $aviso = null;
-        if (! is_null($datos['costo_viaje']) && abs($datos['costo_viaje'] - (float) $viaje->costo_viaje) > 1) {
-            $aviso = 'El costo del viaje en el Excel ($'.number_format($datos['costo_viaje'], 2)
-                .') no coincide con el del contrato ($'.number_format($viaje->costo_viaje, 2).'). No se modificó, revísalo si hace falta.';
-        }
-
-        if (is_null($liquidacion->km_inicial) || is_null($liquidacion->km_final)) {
-            return back()->withErrors([
-                'km' => 'El Excel no trae km inicial y/o final. El resto de la información ya se importó; agrega el km manualmente para poder cerrar la liquidación.'
-                    .($aviso ? ' '.$aviso : ''),
-            ]);
-        }
-
-        $liquidacion->update(['estado' => 'cerrada', 'cerrada_at' => now(), 'cerrada_by' => $userId]);
-
-        return back()->with('success', 'Liquidación importada desde Excel y cerrada correctamente.'.($aviso ? ' '.$aviso : ''));
     }
 
     public function aceptarGasto(Request $request, LiquidacionGasto $liquidacionGasto)

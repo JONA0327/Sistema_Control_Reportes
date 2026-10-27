@@ -29,6 +29,11 @@ class LiquidacionExcelParser
         'LIQUIDA O DEBEMOS', 'GASTOS TOTALES', 'TOTAL GASTOS', 'UTILIDAD TOTAL',
     ];
 
+    /** Campos de texto (no se convierten a número). */
+    private const CAMPOS_TEXTO = [
+        'no_contrato' => 'NO. CONTRATO',
+    ];
+
     private const CAMPOS = [
         'km_inicial'          => 'KM INICIAL',
         'km_final'             => 'KM FINAL',
@@ -67,13 +72,16 @@ class LiquidacionExcelParser
 
         $resultado = [];
         foreach (self::CAMPOS as $campo => $etiqueta) {
-            $resultado[$campo] = self::valorDeEtiqueta($grid, $posiciones, $etiqueta);
+            $resultado[$campo] = self::valorDeEtiqueta($grid, $posiciones, $etiqueta, fn ($v) => self::aNumero($v));
+        }
+        foreach (self::CAMPOS_TEXTO as $campo => $etiqueta) {
+            $resultado[$campo] = self::valorDeEtiqueta($grid, $posiciones, $etiqueta, fn ($v) => trim((string) $v));
         }
 
         return $resultado;
     }
 
-    private static function valorDeEtiqueta(array $grid, array $posiciones, string $etiqueta): ?float
+    private static function valorDeEtiqueta(array $grid, array $posiciones, string $etiqueta, callable $convertir): mixed
     {
         if (! isset($posiciones[$etiqueta])) {
             return null;
@@ -100,7 +108,7 @@ class LiquidacionExcelParser
                 return null; // llegamos a la siguiente etiqueta sin encontrar valor
             }
 
-            return self::aNumero($valor);
+            return $convertir($valor);
         }
 
         return null;

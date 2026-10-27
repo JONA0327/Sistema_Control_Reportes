@@ -141,7 +141,7 @@ Route::middleware('auth')->group(function () {
         Route::post('liquidaciones/{liquidacion}/gastos', [LiquidacionController::class, 'storeGasto'])->name('liquidacion.gastos.store');
         Route::delete('liquidacion-gastos/{liquidacionGasto}', [LiquidacionController::class, 'destroyGasto'])->name('liquidacion.gastos.destroy');
         Route::patch('liquidaciones/{liquidacion}/cerrar', [LiquidacionController::class, 'cerrar'])->name('liquidacion.cerrar');
-        Route::post('liquidaciones/{liquidacion}/importar-excel', [LiquidacionController::class, 'importarExcel'])->name('liquidacion.importar-excel');
+        Route::post('viajes/{viaje}/importar-excel', [ViajeController::class, 'importarExcel'])->name('viajes.importar-excel');
     });
 
     Route::middleware('can:inventario.movimientos')->group(function () {

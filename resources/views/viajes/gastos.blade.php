@@ -219,7 +219,7 @@
                         <p class="text-xs text-gray-500 mb-3">
                             Si el operador entregó la liquidación en el Excel de siempre, súbelo aquí: se leen km, diésel y gastos (casetas, hospedaje, comida, estacionamiento, lavada, otros), se guarda el archivo como respaldo, y se cierra la liquidación automáticamente.
                         </p>
-                        <form method="POST" action="{{ route('liquidacion.importar-excel', $viaje->liquidacion) }}" enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
+                        <form method="POST" action="{{ route('viajes.importar-excel', $viaje) }}" enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
                             @csrf
                             <div class="flex-1 min-w-[200px]">
                                 <input type="file" name="excel" accept=".xlsx,.xls" required
