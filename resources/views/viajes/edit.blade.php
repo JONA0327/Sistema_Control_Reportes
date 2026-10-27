@@ -24,7 +24,7 @@
             <h1 class="text-xl font-bold text-white">Viaje {{ $viaje->no_contrato }}</h1>
             <p class="text-xs text-gray-500 mt-0.5">
                 @if($viaje->esta_pendiente)
-                    Pendiente — completa la unidad, operador y gastos para activarlo
+                    Pendiente — completa origen, destino, recorridos y gastos para activarlo
                 @elseif(!$viaje->liquidacion || $viaje->liquidacion->estado === 'abierta')
                     En curso — el operador registra el km y cierra la liquidación desde Gastos
                 @else

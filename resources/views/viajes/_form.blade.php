@@ -29,7 +29,7 @@
             {{-- Unidad --}}
             <div>
                 <label for="bus_id" class="block text-xs font-medium text-gray-400 mb-1.5">
-                    Unidad <span class="text-red-500">*</span>
+                    Unidad <span class="text-xs text-gray-600 font-normal">(opcional)</span>
                 </label>
                 @if($buses->isEmpty())
                     <div class="flex items-center gap-3 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
@@ -58,7 +58,7 @@
             {{-- Operador --}}
             <div class="sm:col-span-2">
                 <label for="operador_id" class="block text-xs font-medium text-gray-400 mb-1.5">
-                    Operador <span class="text-red-500">*</span>
+                    Operador <span class="text-xs text-gray-600 font-normal">(opcional, por ahora)</span>
                 </label>
                 @if($operadores->isEmpty())
                     <div class="flex items-center gap-3 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">

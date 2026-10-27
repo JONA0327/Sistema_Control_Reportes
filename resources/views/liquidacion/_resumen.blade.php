@@ -98,7 +98,7 @@
     @if($resumen['doble_operador'] && $liquidacion->viaje->segundoOperador)
         <div class="mt-3 px-3 py-2 bg-gray-900/40 border border-gray-700/40 rounded-lg">
             <p class="text-xs text-gray-400">
-                Viaje con doble operador: <span class="text-white">{{ $liquidacion->viaje->operador->name }} {{ $liquidacion->viaje->operador->last_name }}</span>
+                Viaje con doble operador: <span class="text-white">{{ $liquidacion->viaje->operador ? $liquidacion->viaje->operador->name.' '.$liquidacion->viaje->operador->last_name : 'Sin asignar' }}</span>
                 (titular, gestiona los gastos) y <span class="text-white">{{ $liquidacion->viaje->segundoOperador->name }} {{ $liquidacion->viaje->segundoOperador->last_name }}</span>
                 (segundo operador, consulta sin editar). Cada uno gana 10% del costo del viaje en vez del 15% de un solo operador.
             </p>

@@ -23,7 +23,7 @@
         <div class="flex-1">
             <h1 class="text-2xl font-bold text-white">Gastos — {{ $viaje->no_contrato }}</h1>
             <p class="text-sm text-gray-500 mt-0.5">
-                Bus #{{ $viaje->bus->num_bus }} · {{ $viaje->operador->name }} {{ $viaje->operador->last_name }} · {{ $viaje->origen }} &rarr; {{ $viaje->destino }}
+                {{ $viaje->bus ? 'Bus #'.$viaje->bus->num_bus : 'Sin unidad' }} · {{ $viaje->operador ? $viaje->operador->name.' '.$viaje->operador->last_name : 'Sin operador' }} · {{ $viaje->origen }} &rarr; {{ $viaje->destino }}
             </p>
         </div>
         @if($viaje->liquidacion && $viaje->liquidacion->estado === 'cerrada')

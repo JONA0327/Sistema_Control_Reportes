@@ -143,7 +143,7 @@
                         <td>
                             <span class="label">Operador{{ $viaje->doble_operador ? 'es' : '' }}:</span>
                             <span class="value">
-                                {{ $viaje->operador->name }} {{ $viaje->operador->last_name }}
+                                {{ $viaje->operador ? $viaje->operador->name.' '.$viaje->operador->last_name : 'Sin asignar' }}
                                 @if($viaje->doble_operador && $viaje->segundoOperador)
                                     <br>{{ $viaje->segundoOperador->name }} {{ $viaje->segundoOperador->last_name }}
                                 @endif
@@ -155,7 +155,7 @@
             <td>
                 <table class="data-grid">
                     <tr>
-                        <td><span class="label">No. Unidad:</span> <span class="value">{{ $viaje->bus->num_bus }} ({{ $viaje->bus->placa }})</span></td>
+                        <td><span class="label">No. Unidad:</span> <span class="value">{{ $viaje->bus ? $viaje->bus->num_bus.' ('.$viaje->bus->placa.')' : 'Sin asignar' }}</span></td>
                     </tr>
                     <tr>
                         <td><span class="label">Fecha salida:</span> <span class="value">{{ $viaje->fecha_salida->format('d/m/Y') }}</span></td>
@@ -279,7 +279,7 @@
         <tr>
             <td>
                 <div class="sign-line">
-                    <div class="sign-name">{{ $viaje->operador->name }} {{ $viaje->operador->last_name }}</div>
+                    <div class="sign-name">{{ $viaje->operador ? $viaje->operador->name.' '.$viaje->operador->last_name : 'Sin asignar' }}</div>
                     <div class="sign-role">Operador{{ $viaje->doble_operador ? ' titular' : '' }}</div>
                 </div>
             </td>

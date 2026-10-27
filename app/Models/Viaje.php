@@ -36,8 +36,7 @@ class Viaje extends Model
 
     public function getEstaPendienteAttribute(): bool
     {
-        return is_null($this->operador_id)
-            || is_null($this->origen)
+        return is_null($this->origen)
             || is_null($this->destino)
             || is_null($this->recorridos)
             || is_null($this->gastos_entregados)

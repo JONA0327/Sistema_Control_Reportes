@@ -131,8 +131,8 @@ class ViajeController extends Controller
     {
         return $request->validate([
             'no_contrato'          => ['required', 'string', 'max:255'],
-            'bus_id'                => ['required', 'exists:buses,id'],
-            'operador_id'           => ['required', 'exists:users,id'],
+            'bus_id'                => ['nullable', 'exists:buses,id'],
+            'operador_id'           => ['nullable', 'exists:users,id'],
             'segundo_operador_id'   => ['nullable', 'exists:users,id', 'different:operador_id'],
             'origen'                => ['required', 'string', 'max:255'],
             'destino'               => ['required', 'string', 'max:255'],
