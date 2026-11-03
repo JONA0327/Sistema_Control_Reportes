@@ -38,9 +38,7 @@ class Viaje extends Model
     {
         return is_null($this->origen)
             || is_null($this->destino)
-            || is_null($this->recorridos)
-            || is_null($this->gastos_entregados)
-            || is_null($this->gasto_diesel_inicio);
+            || is_null($this->gastos_entregados);
     }
 
     public function contrato()
@@ -131,6 +129,7 @@ class Viaje extends Model
             ! is_null($this->cerrado_at) => 'El viaje ya está cerrado.',
             $this->esta_pendiente => 'El viaje sigue pendiente de capturarse.',
             $this->liquidacion?->estado !== 'cerrada' => 'La liquidación del operador aún no está cerrada.',
+            ! $this->liquidacion->dieselCapturado() => 'Falta capturar el diésel de salida del viaje en Gastos.',
             default => null,
         };
     }

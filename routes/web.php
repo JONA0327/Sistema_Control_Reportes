@@ -121,6 +121,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('can:gastos.aprobar')->group(function () {
         Route::get('viajes/{viaje}/gastos', [DieselCargaController::class, 'showForViaje'])->name('viajes.gastos');
+        Route::put('viajes/{viaje}/gastos/diesel', [DieselCargaController::class, 'guardarDieselCierre'])->name('viajes.gastos.diesel.guardar');
         Route::post('viajes/{viaje}/gastos/diesel-extra', [DieselCargaController::class, 'storeExtraByAdmin'])->name('viajes.gastos.diesel-extra.store');
         Route::patch('gastos/diesel/{dieselCarga}/aprobar-solicitud', [DieselCargaController::class, 'aprobarSolicitud'])->name('gastos.diesel.aprobar-solicitud');
         Route::patch('gastos/diesel/{dieselCarga}/rechazar-solicitud', [DieselCargaController::class, 'rechazarSolicitud'])->name('gastos.diesel.rechazar-solicitud');

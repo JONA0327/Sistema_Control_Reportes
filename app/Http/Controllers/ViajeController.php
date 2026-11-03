@@ -55,30 +55,6 @@ class ViajeController extends Controller
 
         Liquidacion::firstOrCreate(['viaje_id' => $viaje->id]);
 
-        $dieselInicial = $viaje->dieselCargas()->where('tipo', 'inicial')->first();
-
-        if ($dieselInicial) {
-            $dieselInicial->update([
-                'monto'       => $viaje->gasto_diesel_inicio,
-                'litros'      => $viaje->litros_diesel_inicio,
-                'costo_litro' => $viaje->costo_litro_diesel_inicio,
-            ]);
-            IngresoEgreso::actualizarMontoDesdeOrigen($dieselInicial, (float) $viaje->gasto_diesel_inicio);
-        } else {
-            $dieselInicial = $viaje->dieselCargas()->create([
-                'tipo'             => 'inicial',
-                'monto'            => $viaje->gasto_diesel_inicio,
-                'litros'           => $viaje->litros_diesel_inicio,
-                'costo_litro'      => $viaje->costo_litro_diesel_inicio,
-                'origen'           => 'administracion',
-                'estado_solicitud' => 'aprobada',
-                'requested_by'     => $request->user()->id,
-                'reviewed_by'      => $request->user()->id,
-                'reviewed_at'      => now(),
-            ]);
-            $dieselInicial->registrarEgresoAutomatico($request->user()->id);
-        }
-
         if ($viaje->retiene_movimientos) {
             // Compras sin cerrar: se registra en el cierre del viaje.
         } elseif ($viaje->gastos_entregados > 0) {
@@ -136,25 +112,25 @@ class ViajeController extends Controller
         // faltarle son estos dos campos (el resto ya viene del contrato).
         $cambiosViaje = array_filter([
             'gastos_entregados' => $datos['gastos_entregados'],
-            'gasto_diesel_inicio' => $datos['diesel_viaje_monto'],
-            'litros_diesel_inicio' => $datos['diesel_viaje_litros'],
         ], fn ($v) => ! is_null($v));
 
         if ($cambiosViaje) {
             $viaje->update($cambiosViaje);
         }
 
-        if (! is_null($viaje->gasto_diesel_inicio)) {
+        // El diésel de salida del Excel se registra como carga inicial; si no
+        // trae, se captura a mano al cerrar la liquidación.
+        if (! is_null($datos['diesel_viaje_monto'])) {
             $dieselInicial = $viaje->dieselCargas()->where('tipo', 'inicial')->first();
 
             if ($dieselInicial) {
-                $dieselInicial->update(['monto' => $viaje->gasto_diesel_inicio, 'litros' => $viaje->litros_diesel_inicio]);
-                IngresoEgreso::actualizarMontoDesdeOrigen($dieselInicial, (float) $viaje->gasto_diesel_inicio);
+                $dieselInicial->update(['monto' => $datos['diesel_viaje_monto'], 'litros' => $datos['diesel_viaje_litros']]);
+                IngresoEgreso::actualizarMontoDesdeOrigen($dieselInicial, (float) $datos['diesel_viaje_monto']);
             } else {
                 $dieselInicial = $viaje->dieselCargas()->create([
                     'tipo' => 'inicial',
-                    'monto' => $viaje->gasto_diesel_inicio,
-                    'litros' => $viaje->litros_diesel_inicio,
+                    'monto' => $datos['diesel_viaje_monto'],
+                    'litros' => $datos['diesel_viaje_litros'],
                     'origen' => 'administracion',
                     'estado_solicitud' => 'aprobada',
                     'requested_by' => $userId,
@@ -233,7 +209,7 @@ class ViajeController extends Controller
 
         if ($viaje->esta_pendiente) {
             return back()->withErrors([
-                'excel' => 'El Excel no trae gastos entregados y/o diésel de salida. Complétalos a mano para activar el viaje.'.$sufijoAvisos,
+                'excel' => 'El Excel no trae los gastos entregados. Complétalos a mano para activar el viaje.'.$sufijoAvisos,
             ]);
         }
 
@@ -283,14 +259,11 @@ class ViajeController extends Controller
             'segundo_operador_id'   => ['nullable', 'exists:users,id', 'different:operador_id'],
             'origen'                => ['required', 'string', 'max:255'],
             'destino'               => ['required', 'string', 'max:255'],
-            'recorridos'            => ['required', 'string'],
+            'recorridos'            => ['nullable', 'string'],
             'fecha_salida'          => ['required', 'date'],
             'fecha_regreso'         => ['required', 'date', 'after_or_equal:fecha_salida'],
             'costo_viaje'           => ['required', 'numeric', 'min:0'],
             'gastos_entregados'     => ['required', 'numeric', 'min:0'],
-            'gasto_diesel_inicio'   => ['required', 'numeric', 'min:0'],
-            'litros_diesel_inicio'      => ['nullable', 'numeric', 'min:0'],
-            'costo_litro_diesel_inicio' => ['nullable', 'numeric', 'min:0'],
         ]);
     }
 }

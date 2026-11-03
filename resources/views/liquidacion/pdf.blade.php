@@ -224,9 +224,16 @@
                 <td class="monto">${{ number_format($gastosPorTipo[$key] ?? 0, 2) }}</td>
             </tr>
         @endforeach
+        <tr>
+            <td class="concepto">
+                Comisión operador
+                <span style="color:#9ca3af; font-weight: normal;">({{ $viaje->doble_operador ? '10% × 2 operadores' : '15%' }})</span>
+            </td>
+            <td class="monto">${{ number_format($comisionOperador, 2) }}</td>
+        </tr>
         <tr class="total">
-            <td class="concepto">Total otros gastos</td>
-            <td class="monto">${{ number_format($totalOtrosGastos, 2) }}</td>
+            <td class="concepto">Total gastos del operador</td>
+            <td class="monto">${{ number_format($gastosOperador, 2) }}</td>
         </tr>
     </table>
 
@@ -239,20 +246,11 @@
             <td class="monto">${{ number_format($viaje->costo_viaje, 2) }}</td>
         </tr>
         <tr>
-            <td class="concepto">
-                Comisión operador
-                <span style="color:#9ca3af; font-weight: normal;">
-                    ({{ $viaje->doble_operador ? '10% × 2 operadores' : '15%' }})
-                </span>
-            </td>
-            <td class="monto">${{ number_format($comisionOperador, 2) }}</td>
-        </tr>
-        <tr>
             <td class="concepto">Gastos entregados al operador</td>
             <td class="monto">${{ number_format($viaje->gastos_entregados, 2) }}</td>
         </tr>
         <tr>
-            <td class="concepto">Gastos totales (diésel + otros)</td>
+            <td class="concepto">Gastos totales (diésel + otros + comisión)</td>
             <td class="monto">${{ number_format($gastosTotales, 2) }}</td>
         </tr>
         <tr class="total">
@@ -271,7 +269,7 @@
     </div>
 
     <div class="nota-box">
-        "Gastos entregados al operador" menos lo efectivamente gastado (diésel financiado con gastos entregados + otros gastos aceptados) determina si el operador debe devolver saldo o si la empresa le debe. La "Utilidad total" es el costo del viaje menos la comisión del operador y el total de gastos del viaje (diésel + otros), sin importar la fuente de pago.
+        "Gastos entregados al operador" menos los gastos del operador (otros gastos aceptados + su comisión) determina si el operador debe devolver saldo o si la empresa le debe. La "Utilidad total" es el costo del viaje menos los gastos totales (diésel + otros gastos + comisión del operador).
     </div>
 
     {{-- Firmas --}}

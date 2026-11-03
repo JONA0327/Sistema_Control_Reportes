@@ -3,7 +3,7 @@
 @else
     <div class="space-y-3">
         @foreach($liquidacion->gastos as $gasto)
-            @include('liquidacion._gasto_item', ['gasto' => $gasto, 'context' => $context ?? 'operador', 'soloLectura' => $soloLectura ?? false])
+            @include('liquidacion._gasto_item', ['gasto' => $gasto, 'context' => $context ?? 'operador', 'soloLectura' => $soloLectura ?? false, 'editarCerrada' => $editarCerrada ?? false])
         @endforeach
     </div>
 @endif

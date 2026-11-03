@@ -26,7 +26,7 @@
                 {{ $viaje->bus ? 'Bus #'.$viaje->bus->num_bus : 'Sin unidad' }} · {{ $viaje->operador ? $viaje->operador->name.' '.$viaje->operador->last_name : 'Sin operador' }} · {{ $viaje->origen }} &rarr; {{ $viaje->destino }}
             </p>
         </div>
-        @if($viaje->liquidacion && $viaje->liquidacion->estado === 'cerrada')
+        @if($viaje->liquidacion && $viaje->liquidacion->estado === 'cerrada' && $viaje->liquidacion->dieselCapturado())
             <a href="{{ route('liquidacion.pdf', $viaje->liquidacion) }}" target="_blank"
                class="flex items-center gap-2 px-4 py-2.5 bg-gray-700/60 hover:bg-gray-700 border border-gray-600/40 rounded-xl text-sm font-medium text-gray-200 transition-colors flex-shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@
 
     <div class="max-w-3xl space-y-4">
         @if($viaje->liquidacion)
-            @include('liquidacion._resumen', ['liquidacion' => $viaje->liquidacion, 'editable' => $viaje->liquidacion->estado === 'abierta'])
+            @include('liquidacion._resumen', ['liquidacion' => $viaje->liquidacion, 'editable' => true])
         @endif
 
         @forelse($viaje->dieselCargas as $carga)
@@ -205,11 +205,69 @@
             </div>
         </div>
 
+        @if($viaje->liquidacion && $viaje->liquidacion->estado === 'cerrada')
+            @php
+                $cargasAprobadas = $viaje->dieselCargas->where('estado_solicitud', 'aprobada');
+                $dSalida = $cargasAprobadas->firstWhere('tipo', 'inicial');
+                $dExtras = $cargasAprobadas->where('tipo', 'extra');
+                $campo = 'w-full px-3 py-2 bg-gray-900/80 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500';
+                $filaDiesel = function ($titulo, $prefijo, $carga) use ($campo) {
+                    return compact('titulo', 'prefijo', 'carga', 'campo');
+                };
+                $filas = [$filaDiesel('Diésel de salida', $dSalida ? "cargas[{$dSalida->id}]" : 'salida', $dSalida)];
+                foreach ($dExtras as $e) {
+                    $filas[] = $filaDiesel('Diésel de regreso (extra)', "cargas[{$e->id}]", $e);
+                }
+                if ($dExtras->isEmpty()) {
+                    $filas[] = $filaDiesel('Diésel de regreso (opcional)', 'regreso', null);
+                }
+            @endphp
+            <div class="bg-gray-800/40 border {{ $viaje->liquidacion->dieselCapturado() ? 'border-gray-700/40' : 'border-amber-500/40' }} rounded-2xl p-5">
+                <h3 class="text-sm font-semibold text-white mb-1">Diésel del viaje</h3>
+                <p class="text-xs text-gray-500 mb-4">
+                    {{ $viaje->liquidacion->dieselCapturado() ? 'Puedes corregirlo; cada cambio queda registrado en movimientos.' : 'Captura el diésel para poder generar la hoja de liquidación y cerrar el viaje.' }}
+                    El diésel de regreso se jala de lo ya registrado; si no hubo, déjalo vacío o captúralo a mano.
+                </p>
+                <form method="POST" action="{{ route('viajes.gastos.diesel.guardar', $viaje) }}" class="space-y-4">
+                    @csrf @method('PUT')
+                    @foreach($filas as $f)
+                        <div>
+                            <p class="text-xs font-medium text-gray-300 mb-2">{{ $f['titulo'] }}</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">Monto</label>
+                                    <input type="number" step="0.01" min="0" name="{{ $f['prefijo'] }}[monto]" value="{{ old($f['prefijo'].'.monto', $f['carga']?->monto) }}" class="{{ $campo }}" placeholder="0.00"/>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">Litros</label>
+                                    <input type="number" step="0.01" min="0" name="{{ $f['prefijo'] }}[litros]" value="{{ old($f['prefijo'].'.litros', $f['carga']?->litros) }}" class="{{ $campo }}" placeholder="0.00"/>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">Costo por litro</label>
+                                    <input type="number" step="0.01" min="0" name="{{ $f['prefijo'] }}[costo_litro]" value="{{ old($f['prefijo'].'.costo_litro', $f['carga']?->costo_litro) }}" class="{{ $campo }}" placeholder="vacío = monto ÷ litros"/>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                    @if($errors->any() && ! $errors->has('excel') && ! $errors->has('km'))
+                        <p class="text-xs text-red-400">{{ $errors->first() }}</p>
+                    @endif
+                    <button type="submit" class="px-5 py-2.5 btn-login-gradient text-white text-sm font-semibold rounded-xl shadow-lg shadow-red-950/40">
+                        Guardar diésel
+                    </button>
+                </form>
+            </div>
+        @endif
+
         @if($viaje->liquidacion)
             <div>
                 <h3 class="text-sm font-semibold text-white mb-3">Otros gastos</h3>
                 @if($viaje->liquidacion->estado === 'cerrada')
-                    @include('liquidacion._gastos_list', ['liquidacion' => $viaje->liquidacion, 'context' => 'admin'])
+                    <p class="mb-3 text-xs text-gray-500">Liquidación cerrada. Puedes corregir km y gastos; cada cambio queda registrado en movimientos.</p>
+                    <div class="space-y-3">
+                        @include('liquidacion._gastos_list', ['liquidacion' => $viaje->liquidacion, 'context' => 'admin', 'editarCerrada' => true])
+                        @include('liquidacion._gasto_form', ['liquidacion' => $viaje->liquidacion])
+                    </div>
                 @else
                     <p class="mb-3 text-xs text-gray-500">Liquidación abierta. Si el operador aún no la captura, administración puede registrar los gastos y cerrarla por él.</p>
 

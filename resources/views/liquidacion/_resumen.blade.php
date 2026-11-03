@@ -79,7 +79,7 @@
             <p class="text-sm text-white font-medium">${{ number_format($liquidacion->viaje->gastos_entregados, 2) }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-500">Gastos realizados</p>
+            <p class="text-xs text-gray-500">Gastos del operador <span class="text-gray-600">(otros + comisión)</span></p>
             <p class="text-sm text-white font-medium">${{ number_format($resumen['total_gastos_realizados'], 2) }}</p>
         </div>
         <div>
@@ -107,11 +107,11 @@
 
     @if($resumen['exceso_gasto'] > 0)
         <div class="mt-3 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
-            <p class="text-xs text-red-400 font-medium">Exceso de gasto: ${{ number_format($resumen['exceso_gasto'], 2) }} por encima de lo entregado.</p>
+            <p class="text-xs text-red-400 font-medium">Le debemos al operador: ${{ number_format($resumen['exceso_gasto'], 2) }} (gastos + comisión por encima de lo entregado).</p>
         </div>
     @else
         <div class="mt-3 px-3 py-2 bg-green-500/10 border border-green-500/20 rounded-lg">
-            <p class="text-xs text-green-400 font-medium">Sobrante a devolver: ${{ number_format($resumen['sobrante_a_devolver'], 2) }}</p>
+            <p class="text-xs text-green-400 font-medium">El operador liquida (devuelve): ${{ number_format($resumen['sobrante_a_devolver'], 2) }}</p>
         </div>
     @endif
 

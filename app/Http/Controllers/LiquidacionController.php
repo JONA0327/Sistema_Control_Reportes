@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Liquidacion;
 use App\Models\LiquidacionGasto;
+use App\Models\Movimiento;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -17,25 +19,45 @@ class LiquidacionController extends Controller
         return $liquidacion->viaje->operador_id === $request->user()->id || $request->user()->can('gastos.aprobar');
     }
 
+    /**
+     * Abierta: quien puede capturar. Cerrada: solo administración, para
+     * correcciones; esos cambios quedan en movimientos.
+     */
+    private function puedeModificar(Request $request, Liquidacion $liquidacion): bool
+    {
+        return $liquidacion->estado === 'abierta'
+            ? $this->puedeCapturar($request, $liquidacion)
+            : $request->user()->can('gastos.aprobar');
+    }
+
+    private function registrarCorreccion(Request $request, Liquidacion $liquidacion, string $accion, string $descripcion, ?Model $movible = null): void
+    {
+        if ($liquidacion->estado !== 'cerrada') {
+            return;
+        }
+
+        Movimiento::registrar('viajes', $accion, "Liquidación cerrada del viaje {$liquidacion->viaje->no_contrato}: {$descripcion}", null, $movible ?? $liquidacion, $request->user()->id);
+    }
+
     public function updateKm(Request $request, Liquidacion $liquidacion)
     {
-        abort_unless($this->puedeCapturar($request, $liquidacion), 403);
-        abort_if($liquidacion->estado !== 'abierta', 403);
+        abort_unless($this->puedeModificar($request, $liquidacion), 403);
 
         $data = $request->validate([
             'km_inicial' => ['required', 'numeric', 'min:0'],
             'km_final'   => ['nullable', 'numeric', 'gte:km_inicial'],
         ]);
 
+        $antes = sprintf('%s / %s', $liquidacion->km_inicial ?? '—', $liquidacion->km_final ?? '—');
         $liquidacion->update($data);
+        $this->registrarCorreccion($request, $liquidacion, 'editado', "km inicial/final {$antes} → ".sprintf('%s / %s', $liquidacion->km_inicial ?? '—', $liquidacion->km_final ?? '—'));
 
         return back()->with('success', 'Kilometraje actualizado.');
     }
 
     public function storeGasto(Request $request, Liquidacion $liquidacion)
     {
-        abort_unless($this->puedeCapturar($request, $liquidacion), 403);
-        abort_if($liquidacion->estado !== 'abierta', 403);
+        abort_unless($this->puedeModificar($request, $liquidacion), 403);
 
         $data = $request->validate([
             'tipo'       => ['required', Rule::in(array_keys(LiquidacionGasto::TIPOS))],
@@ -49,7 +71,7 @@ class LiquidacionController extends Controller
             return back()->withErrors(['concepto' => 'Este campo es obligatorio.'])->withInput();
         }
 
-        LiquidacionGasto::create([
+        $gasto = LiquidacionGasto::create([
             'liquidacion_id' => $liquidacion->id,
             'tipo'           => $data['tipo'],
             'concepto'       => $requiereConcepto ? $data['concepto'] : null,
@@ -62,6 +84,8 @@ class LiquidacionController extends Controller
             'capturado_por' => $liquidacion->viaje->operador_id === $request->user()->id ? null : $request->user()->id,
         ]);
 
+        $this->registrarCorreccion($request, $liquidacion, 'creado', 'se agregó gasto '.LiquidacionGasto::TIPOS[$gasto->tipo]['label'].($gasto->concepto ? " ({$gasto->concepto})" : '').' por $'.number_format($gasto->monto, 2), $gasto);
+
         return back()->with('success', 'Gasto registrado.');
     }
 
@@ -69,12 +93,13 @@ class LiquidacionController extends Controller
     {
         $liquidacion = $liquidacionGasto->liquidacion;
 
-        abort_unless($this->puedeCapturar($request, $liquidacion), 403);
-        abort_if($liquidacion->estado !== 'abierta', 403);
+        abort_unless($this->puedeModificar($request, $liquidacion), 403);
 
         if ($liquidacionGasto->evidencia_path) {
             Storage::disk('public')->delete($liquidacionGasto->evidencia_path);
         }
+
+        $this->registrarCorreccion($request, $liquidacion, 'eliminado', 'se eliminó gasto '.LiquidacionGasto::TIPOS[$liquidacionGasto->tipo]['label'].($liquidacionGasto->concepto ? " ({$liquidacionGasto->concepto})" : '').' por $'.number_format($liquidacionGasto->monto, 2));
 
         $liquidacionGasto->delete();
 
@@ -127,9 +152,11 @@ class LiquidacionController extends Controller
         return back()->with('success', 'Gasto rechazado.');
     }
 
-    public function exportPdf(Liquidacion $liquidacion)
+    public function exportPdf(Request $request, Liquidacion $liquidacion)
     {
         abort_if($liquidacion->estado !== 'cerrada', 403, 'Solo se puede exportar la hoja de una liquidación cerrada.');
+
+        abort_unless($liquidacion->dieselCapturado(), 403, 'Captura el diésel del viaje antes de generar la hoja de liquidación.');
 
         $liquidacion->load(['viaje.bus', 'viaje.operador', 'viaje.segundoOperador', 'gastos', 'cerradaPor']);
 
@@ -144,6 +171,8 @@ class LiquidacionController extends Controller
             'logoBase64'  => $logoBase64,
         ] + $d)->setPaper('letter', 'portrait');
 
-        return $pdf->stream("liquidacion-{$viaje->no_contrato}.pdf");
+        $archivo = "liquidacion-{$viaje->no_contrato}.pdf";
+
+        return $request->boolean('descargar') ? $pdf->download($archivo) : $pdf->stream($archivo);
     }
 }

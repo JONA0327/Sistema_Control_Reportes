@@ -145,7 +145,7 @@
             {{-- Recorridos --}}
             <div class="sm:col-span-2">
                 <label for="recorridos" class="block text-xs font-medium text-gray-400 mb-1.5">
-                    Recorridos <span class="text-red-500">*</span>
+                    Recorridos <span class="text-gray-600">(opcional)</span>
                 </label>
                 <textarea id="recorridos" name="recorridos" rows="2"
                           class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('recorridos') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors resize-none"
@@ -220,49 +220,6 @@
                        class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('gastos_entregados') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                        placeholder="0.00"/>
                 @error('gastos_entregados')
-                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
-
-            {{-- Gasto diésel inicio --}}
-            <div>
-                <label for="gasto_diesel_inicio" class="block text-xs font-medium text-gray-400 mb-1.5">
-                    Diésel de salida <span class="text-red-500">*</span>
-                </label>
-                <input type="number" step="0.01" min="0" id="gasto_diesel_inicio" name="gasto_diesel_inicio"
-                       value="{{ old('gasto_diesel_inicio', $viaje->gasto_diesel_inicio ?? '') }}"
-                       class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('gasto_diesel_inicio') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-                       placeholder="0.00"/>
-                @error('gasto_diesel_inicio')
-                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
-
-            {{-- Litros diésel inicio --}}
-            <div>
-                <label for="litros_diesel_inicio" class="block text-xs font-medium text-gray-400 mb-1.5">
-                    Litros de salida <span class="text-gray-600 font-normal">(opcional)</span>
-                </label>
-                <input type="number" step="0.01" min="0" id="litros_diesel_inicio" name="litros_diesel_inicio"
-                       value="{{ old('litros_diesel_inicio', $viaje->litros_diesel_inicio ?? '') }}"
-                       class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('litros_diesel_inicio') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-                       placeholder="0.00"/>
-                @error('litros_diesel_inicio')
-                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
-
-            {{-- Costo por litro diésel inicio --}}
-            <div>
-                <label for="costo_litro_diesel_inicio" class="block text-xs font-medium text-gray-400 mb-1.5">
-                    Costo por litro de salida <span class="text-gray-600 font-normal">(opcional)</span>
-                </label>
-                <input type="number" step="0.01" min="0" id="costo_litro_diesel_inicio" name="costo_litro_diesel_inicio"
-                       value="{{ old('costo_litro_diesel_inicio', $viaje->costo_litro_diesel_inicio ?? '') }}"
-                       class="w-full px-3.5 py-2.5 bg-gray-900/80 border {{ $errors->has('costo_litro_diesel_inicio') ? 'border-red-500' : 'border-gray-700' }} rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-                       placeholder="0.00"/>
-                <p class="mt-1 text-xs text-gray-600">El diésel extra que registre el operador durante el viaje se suma como el diésel de regreso.</p>
-                @error('costo_litro_diesel_inicio')
                     <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                 @enderror
             </div>

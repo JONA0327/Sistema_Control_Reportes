@@ -46,6 +46,14 @@ class Liquidacion extends Model
         return (float) $this->km_final - (float) $this->km_inicial;
     }
 
+    /** El diésel de salida ya se capturó (monto; los litros son opcionales) al cerrar la liquidación; sin eso no hay hoja ni cierre del viaje. */
+    public function dieselCapturado(): bool
+    {
+        $inicial = $this->viaje->dieselCargas()->where('tipo', 'inicial')->first();
+
+        return $inicial && ! is_null($inicial->monto);
+    }
+
     public function litrosConsumidos(): float
     {
         return (float) $this->viaje->dieselCargas()->whereNotNull('litros')->sum('litros');
@@ -77,15 +85,11 @@ class Liquidacion extends Model
 
     public function totalGastosRealizados(): float
     {
+        // Lo que se le compara contra lo entregado: otros gastos + su comisión.
+        // El diésel no entra aquí; se suma hasta el cierre del viaje.
         $gastosVarios = (float) $this->gastos()->where('estado', '!=', 'rechazado')->sum('monto');
 
-        $dieselDesdeGastos = (float) $this->viaje->dieselCargas()
-            ->where('tipo', 'extra')
-            ->where('fuente', 'gastos_entregados')
-            ->where('estado_solicitud', 'aprobada')
-            ->sum('monto');
-
-        return $gastosVarios + $dieselDesdeGastos;
+        return $gastosVarios + $this->viaje->gananciaEstimada();
     }
 
     public function saldo(): float
@@ -133,13 +137,14 @@ class Liquidacion extends Model
             ->map(fn ($grupo) => (float) $grupo->sum('monto'));
 
         $totalOtrosGastos = (float) $gastosPorTipo->sum();
-        $gastosTotales = $totalDiesel + $totalOtrosGastos;
         $comisionOperador = $viaje->gananciaEstimada();
-        $utilidadTotal = (float) $viaje->costo_viaje - $comisionOperador - $gastosTotales;
+        $gastosOperador = $totalOtrosGastos + $comisionOperador;
+        $gastosTotales = $totalDiesel + $gastosOperador;
+        $utilidadTotal = (float) $viaje->costo_viaje - $gastosTotales;
 
         return compact(
             'resumen', 'dieselInicial', 'dieselSalidaMonto', 'litrosSalida', 'dieselLlegadaMonto', 'litrosLlegada',
-            'costoLitro', 'gastosPorTipo', 'totalOtrosGastos', 'totalDiesel', 'gastosTotales', 'comisionOperador', 'utilidadTotal'
+            'costoLitro', 'gastosPorTipo', 'totalOtrosGastos', 'gastosOperador', 'totalDiesel', 'gastosTotales', 'comisionOperador', 'utilidadTotal'
         );
     }
 

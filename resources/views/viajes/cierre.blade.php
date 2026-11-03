@@ -200,15 +200,15 @@
                 @foreach(\App\Models\LiquidacionGasto::TIPOS as $key => $meta)
                     <div class="{{ $row }}"><span class="text-gray-400">{{ $meta['label'] }}</span><span class="text-gray-200">{{ $money($d['gastosPorTipo'][$key] ?? 0) }}</span></div>
                 @endforeach
-                <div class="{{ $row }} font-semibold"><span class="text-gray-300">Total otros gastos</span><span class="text-gray-100">{{ $money($d['totalOtrosGastos']) }}</span></div>
+                <div class="{{ $row }}"><span class="text-gray-400">Comisión operador ({{ $viaje->doble_operador ? '10% × 2 operadores' : '15%' }})</span><span class="text-gray-200">{{ $money($d['comisionOperador']) }}</span></div>
+                <div class="{{ $row }} font-semibold"><span class="text-gray-300">Total gastos del operador</span><span class="text-gray-100">{{ $money($d['gastosOperador']) }}</span></div>
             </div>
 
             <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl p-5">
                 <h3 class="text-xs uppercase text-gray-500 mb-3">Resumen financiero</h3>
                 <div class="{{ $row }}"><span class="text-gray-400">Costo del viaje</span><span class="text-gray-200">{{ $money($viaje->costo_viaje) }}</span></div>
-                <div class="{{ $row }}"><span class="text-gray-400">Comisión operador ({{ $viaje->doble_operador ? '10% × 2 operadores' : '15%' }})</span><span class="text-gray-200">{{ $money($d['comisionOperador']) }}</span></div>
                 <div class="{{ $row }}"><span class="text-gray-400">Gastos entregados al operador</span><span class="text-gray-200">{{ $money($viaje->gastos_entregados) }}</span></div>
-                <div class="{{ $row }}"><span class="text-gray-400">Gastos totales (diésel + otros)</span><span class="text-gray-200">{{ $money($d['gastosTotales']) }}</span></div>
+                <div class="{{ $row }}"><span class="text-gray-400">Gastos totales (diésel + otros + comisión)</span><span class="text-gray-200">{{ $money($d['gastosTotales']) }}</span></div>
                 <div class="{{ $row }} font-semibold"><span class="text-gray-300">Utilidad total</span><span class="{{ $d['utilidadTotal'] >= 0 ? 'text-emerald-400' : 'text-red-400' }}">{{ $money($d['utilidadTotal']) }}</span></div>
                 <div class="{{ $row }}"><span class="text-gray-400">{{ $res['saldo'] >= 0 ? 'El operador liquida (devuelve)' : 'Le debemos al operador' }}</span><span class="text-gray-200">{{ $money(abs($res['saldo'])) }}</span></div>
             </div>

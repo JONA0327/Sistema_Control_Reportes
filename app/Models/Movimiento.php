@@ -32,6 +32,7 @@ class Movimiento extends Model
         'inventario' => 'Inventario',
         'reportes' => 'Reportes',
         'contratos' => 'Contratos',
+        'viajes' => 'Viajes',
     ];
 
     const ACCIONES = [

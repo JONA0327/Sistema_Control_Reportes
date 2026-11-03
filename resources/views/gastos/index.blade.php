@@ -23,6 +23,17 @@
         </div>
     @endif
 
+    @if($esAdmin)
+        <div class="max-w-3xl mb-5 flex gap-2">
+            @foreach(['curso' => 'En curso', 'cerrados' => 'Cerrados (historial)'] as $clave => $etiqueta)
+                <a href="{{ route('gastos.index', $clave === 'cerrados' ? ['estado' => 'cerrados'] : []) }}"
+                   class="px-4 py-2 rounded-xl text-sm font-medium border transition-colors {{ $vista === $clave ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-800/40 text-gray-400 border-gray-700/40 hover:text-white' }}">
+                    {{ $etiqueta }}
+                </a>
+            @endforeach
+        </div>
+    @endif
+
     @php
         $enCurso = $viajes->filter(fn ($v) => $v->liquidacion && $v->liquidacion->estado === 'abierta');
         $pendientesAccion = $viajes->filter(function ($v) {
@@ -48,6 +59,36 @@
 
     <div class="max-w-3xl space-y-4">
         @forelse($viajes as $viaje)
+            @if($esAdmin)
+                @php $abierta = $viaje->liquidacion && $viaje->liquidacion->estado === 'abierta'; @endphp
+                <div class="bg-gray-800/40 border border-gray-700/40 rounded-2xl hover:bg-gray-800/70 transition-colors flex items-center gap-3 pr-4">
+                <a href="{{ route('viajes.gastos', $viaje) }}" class="block flex-1 min-w-0 px-6 py-4">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-white truncate">{{ $viaje->no_contrato }} · {{ $viaje->bus ? 'Bus #'.$viaje->bus->num_bus : 'Sin unidad' }}</p>
+                            <p class="text-xs text-gray-500 mt-0.5 truncate">
+                                {{ $viaje->operador ? $viaje->operador->name.' '.$viaje->operador->last_name : 'Sin operador' }} · {{ $viaje->origen }} &rarr; {{ $viaje->destino }} · {{ $viaje->fecha_salida->format('d/m/Y') }}
+                            </p>
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-medium flex-shrink-0 {{ $abierta ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20' }}">
+                            {{ $abierta ? 'En curso' : 'Cerrado' }}
+                        </span>
+                    </div>
+                </a>
+                @if(! $abierta && $viaje->liquidacion)
+                    @if($viaje->liquidacion->dieselCapturado())
+                        <a href="{{ route('liquidacion.pdf', ['liquidacion' => $viaje->liquidacion, 'descargar' => 1]) }}"
+                           class="flex items-center gap-2 px-3 py-2 bg-gray-700/60 hover:bg-gray-700 border border-gray-600/40 rounded-xl text-xs font-medium text-gray-200 whitespace-nowrap transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H8a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            PDF
+                        </a>
+                    @else
+                        <a href="{{ route('viajes.gastos', $viaje) }}" class="text-xs text-amber-400 whitespace-nowrap">Falta capturar diésel</a>
+                    @endif
+                @endif
+                </div>
+                @continue
+            @endif
             @php
                 $liquidacionAbierta = $viaje->liquidacion && $viaje->liquidacion->estado === 'abierta';
                 $esTitular = $viaje->operador_id === $userId;
@@ -60,7 +101,7 @@
                         class="w-full px-6 py-4 flex items-center justify-between gap-4 text-left hover:bg-gray-800/70 transition-colors"
                         :class="open ? 'border-b border-gray-700/40' : ''">
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-white truncate">{{ $viaje->no_contrato }} · Bus #{{ $viaje->bus->num_bus }}</p>
+                        <p class="text-sm font-semibold text-white truncate">{{ $viaje->no_contrato }} · {{ $viaje->bus ? 'Bus #'.$viaje->bus->num_bus : 'Sin unidad' }}</p>
                         <p class="text-xs text-gray-500 mt-0.5 truncate">{{ $viaje->origen }} &rarr; {{ $viaje->destino }} · {{ $viaje->fecha_salida->format('d/m/Y') }}</p>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">

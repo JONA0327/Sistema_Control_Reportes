@@ -102,9 +102,9 @@
                         <div class="flex items-center gap-3 mt-1">
                             <span class="text-xs text-gray-600">Gastado: <span class="text-gray-300">${{ number_format($resumen['total_gastos_realizados'], 2) }}</span></span>
                             @if($resumen['exceso_gasto'] > 0)
-                                <span class="text-xs text-red-400">Exceso: ${{ number_format($resumen['exceso_gasto'], 2) }}</span>
+                                <span class="text-xs text-red-400">Se le debe: ${{ number_format($resumen['exceso_gasto'], 2) }}</span>
                             @else
-                                <span class="text-xs text-green-400">Sobrante: ${{ number_format($resumen['sobrante_a_devolver'], 2) }}</span>
+                                <span class="text-xs text-green-400">Liquida: ${{ number_format($resumen['sobrante_a_devolver'], 2) }}</span>
                             @endif
                         </div>
                     </div>
