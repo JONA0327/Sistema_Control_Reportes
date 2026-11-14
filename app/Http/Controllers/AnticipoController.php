@@ -89,7 +89,9 @@ class AnticipoController extends Controller
         abort_if($anticipo->cancelado, 403, 'No se puede editar un anticipo cancelado.');
 
         $data = $request->validate([
-            'monto' => ['required', 'integer', 'min:1'],
+            // min:0 (no min:1 como al crear): permite corregir a $0 un
+            // anticipo capturado por error, sin tener que cancelarlo.
+            'monto' => ['required', 'integer', 'min:0'],
             'fecha_anticipo' => ['required', 'date'],
             'metodo_pago' => ['nullable', 'string', 'max:255'],
             'notas' => ['nullable', 'string', 'max:1000'],

@@ -283,16 +283,18 @@ class Contrato extends Model
     }
 
     /**
-     * Anticipo efectivo que se usa en cálculos y en la UI. Si ya hay
-     * anticipos formalizados (no cancelados), su suma es la fuente de
-     * verdad. Si no hay formales (contratos legacy), se usa la columna
-     * `anticipo` del contrato. Esto evita doble conteo en contratos
-     * nuevos (que se crean con anticipo + formal al mismo tiempo).
+     * Anticipo efectivo que se usa en cálculos y en la UI. Si ya existe
+     * al menos un anticipo formalizado (no cancelado), su suma es la
+     * fuente de verdad — aunque esa suma sea $0 porque se corrigió un
+     * error de captura. Solo se usa la columna legacy `anticipo` cuando
+     * no hay ningún anticipo formal (contratos viejos de antes de esta
+     * tabla). Esto evita doble conteo en contratos nuevos (que se crean
+     * con anticipo + formal al mismo tiempo).
      */
     public function getAnticipoEfectivoAttribute(): float
     {
-        $formalizados = (float) $this->anticipos->whereNull('cancelado_at')->sum('monto');
+        $formales = $this->anticipos->whereNull('cancelado_at');
 
-        return $formalizados > 0 ? $formalizados : (float) $this->anticipo;
+        return $formales->isNotEmpty() ? (float) $formales->sum('monto') : (float) $this->anticipo;
     }
 }
